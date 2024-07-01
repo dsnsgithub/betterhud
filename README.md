@@ -1,4 +1,5 @@
 # BetterHUD Fabric Mod
+A simple HUD with essential information easily accessible for Minecraft Fabric.
 
 ## Features
 
