@@ -15,7 +15,8 @@
 	"icon": "assets/betterhud/icon.png",
 	"environment": "client",
 	"entrypoints": {
-		"client": ["dsns.betterhud.BetterHUD"]
+		"client": ["dsns.betterhud.BetterHUD"],
+		"modmenu": ["dsns.betterhud.ModMenu"]
 	},
 	"mixins": [
 		"betterhud.mixins.json"
