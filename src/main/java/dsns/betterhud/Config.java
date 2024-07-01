@@ -79,6 +79,7 @@ public class Config {
 		prop.setProperty("horizontalPadding" + "", String.valueOf(Config.horizontalPadding));
 		prop.setProperty("verticalMargin", String.valueOf(Config.verticalMargin));
 		prop.setProperty("horizontalMargin" + "", String.valueOf(Config.horizontalMargin));
+		prop.setProperty("lineHeight", String.valueOf(Config.lineHeight));
 		prop.setProperty("textColor", String.valueOf(Config.textColor));
 		prop.setProperty("backgroundColor", String.valueOf(Config.backgroundColor));
 
@@ -96,14 +97,36 @@ public class Config {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 		for (String modID : settings.keySet()) {
 			ModSettings modSettings = settings.get(modID);
-			modSettings.enabled = Boolean.parseBoolean(prop.getProperty(modID + ".enabled"));
-			modSettings.orientation = prop.getProperty(modID + ".orientation");
+			modSettings.enabled = getBooleanProperty(prop, modID + ".enabled", modSettings.enabled);
+			modSettings.orientation = getStringProperty(prop, modID + ".orientation", modSettings.orientation);
 		}
-		Config.verticalPadding = Integer.parseInt(prop.getProperty("verticalPadding"));
-		Config.horizontalPadding = Integer.parseInt(prop.getProperty("horizontalPadding"));
-		Config.textColor = Integer.parseInt(prop.getProperty("textColor"));
-		Config.backgroundColor = Integer.parseInt(prop.getProperty("backgroundColor"));
+
+		Config.verticalPadding = getIntProperty(prop, "verticalPadding", Config.verticalPadding);
+		Config.horizontalPadding = getIntProperty(prop, "horizontalPadding", Config.horizontalPadding);
+		Config.verticalMargin = getIntProperty(prop, "verticalMargin", Config.verticalMargin);
+		Config.horizontalMargin = getIntProperty(prop, "horizontalMargin", Config.horizontalMargin);
+		Config.lineHeight = getIntProperty(prop, "lineHeight", Config.lineHeight);
+		Config.textColor = getIntProperty(prop, "textColor", Config.textColor);
+		Config.backgroundColor = getIntProperty(prop, "backgroundColor", Config.backgroundColor);
+
+		serialize();
+	}
+
+	private static String getStringProperty(Properties prop, String key, String defaultValue) {
+		String value = prop.getProperty(key);
+		return (value != null) ? value : defaultValue;
+	}
+
+	private static int getIntProperty(Properties prop, String key, int defaultValue) {
+		String value = prop.getProperty(key);
+		return (value != null) ? Integer.parseInt(value) : defaultValue;
+	}
+
+	private static boolean getBooleanProperty(Properties prop, String key, boolean defaultValue) {
+		String value = prop.getProperty(key);
+		return (value != null) ? Boolean.parseBoolean(value) : defaultValue;
 	}
 }
