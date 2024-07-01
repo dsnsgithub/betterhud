@@ -10,18 +10,24 @@ import net.fabricmc.loader.api.FabricLoader;
 class ModSettings {
 	public String orientation;
 	public boolean enabled;
+	public boolean customPosition;
+	public int customX;
+	public int customY;
 
-	public ModSettings(String orientation, boolean enabled) {
+	public ModSettings(String orientation, boolean enabled, boolean customPosition, int customX, int customY) {
 		this.orientation = orientation;
 		this.enabled = enabled;
+		this.customPosition = customPosition;
+		this.customX = customX;
+		this.customY = customY;
 	}
 
 	public ModSettings(String orientation) {
-		this(orientation, true);
+		this(orientation, true, false, 0, 0);
 	}
 
 	public ModSettings() {
-		this("top-left", true);
+		this("top-left", true, false, 0, 0);
 	}
 }
 
@@ -32,8 +38,8 @@ public class Config {
 	public static int verticalMargin = 1;
 	public static int horizontalMargin = 1;
 
-	public static int lineHeight = 8;
-	
+	public static int lineHeight = 1;
+
 	public static int textColor = 0xffffffff;
 	public static int backgroundColor = 0x88000000;
 
@@ -51,6 +57,7 @@ public class Config {
 		defaults.put("Coordinates", new ModSettings("top-right"));
 		defaults.put("Biome", new ModSettings("top-right"));
 		defaults.put("Facing", new ModSettings("top-right"));
+		defaults.put("Time", new ModSettings("bottom-right"));
 
 		return defaults;
 	}
@@ -73,6 +80,9 @@ public class Config {
 			ModSettings modSettings = settings.get(modID);
 			prop.setProperty(modID + ".enabled", String.valueOf(modSettings.enabled));
 			prop.setProperty(modID + ".orientation", modSettings.orientation);
+			prop.setProperty(modID + ".customPosition", String.valueOf(modSettings.customPosition));
+			prop.setProperty(modID + ".customX", String.valueOf(modSettings.customX));
+			prop.setProperty(modID + ".customY", String.valueOf(modSettings.customY));
 		}
 
 		prop.setProperty("verticalPadding", String.valueOf(Config.verticalPadding));
@@ -102,6 +112,10 @@ public class Config {
 			ModSettings modSettings = settings.get(modID);
 			modSettings.enabled = getBooleanProperty(prop, modID + ".enabled", modSettings.enabled);
 			modSettings.orientation = getStringProperty(prop, modID + ".orientation", modSettings.orientation);
+			modSettings.customPosition = getBooleanProperty(prop, modID + ".customPosition",
+					modSettings.customPosition);
+			modSettings.customX = getIntProperty(prop, modID + ".customX", modSettings.customX);
+			modSettings.customY = getIntProperty(prop, modID + ".customY", modSettings.customY);
 		}
 
 		Config.verticalPadding = getIntProperty(prop, "verticalPadding", Config.verticalPadding);
@@ -116,17 +130,29 @@ public class Config {
 	}
 
 	private static String getStringProperty(Properties prop, String key, String defaultValue) {
-		String value = prop.getProperty(key);
-		return (value != null) ? value : defaultValue;
+		try {
+			String value = prop.getProperty(key);
+			return (value != null) ? value : defaultValue;
+		} catch (Exception e) {
+			return defaultValue;
+		}
 	}
 
 	private static int getIntProperty(Properties prop, String key, int defaultValue) {
-		String value = prop.getProperty(key);
-		return (value != null) ? Integer.parseInt(value) : defaultValue;
+		try {
+			String value = prop.getProperty(key);
+			return (value != null) ? Integer.parseInt(value) : defaultValue;
+		} catch (Exception e) {
+			return defaultValue;
+		}
 	}
 
 	private static boolean getBooleanProperty(Properties prop, String key, boolean defaultValue) {
-		String value = prop.getProperty(key);
-		return (value != null) ? Boolean.parseBoolean(value) : defaultValue;
+		try {
+			String value = prop.getProperty(key);
+			return (value != null) ? Boolean.parseBoolean(value) : defaultValue;
+		} catch (Exception e) {
+			return defaultValue;
+		}
 	}
 }

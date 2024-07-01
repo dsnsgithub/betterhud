@@ -16,13 +16,17 @@ import dsns.betterhud.util.CustomText;
 
 public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTick {
 	private final MinecraftClient client = MinecraftClient.getInstance();
-	private final List<CustomText> leftTextList = new ObjectArrayList<>();
-	private final List<CustomText> rightTextList = new ObjectArrayList<>();
+	private final List<CustomText> topLeftText = new ObjectArrayList<>();
+	private final List<CustomText> topRightText = new ObjectArrayList<>();
+	private final List<CustomText> bottomRightText = new ObjectArrayList<>();
+	private final List<CustomText> customPositionText = new ObjectArrayList<>();
 
 	@Override
 	public void onStartTick(MinecraftClient client) {
-		this.leftTextList.clear();
-		this.rightTextList.clear();
+		this.topLeftText.clear();
+		this.topRightText.clear();
+		this.bottomRightText.clear();
+		this.customPositionText.clear();
 
 		ArrayList<BaseMod> mods = new ArrayList<>();
 		mods.add(new FPS());
@@ -31,6 +35,7 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 		mods.add(new Coordinates());
 		mods.add(new Biome());
 		mods.add(new Facing());
+		mods.add(new Time());
 
 		for (BaseMod mod : mods) {
 			ModSettings modSettings = Config.settings.get(mod.getModID());
@@ -41,10 +46,17 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 			if (modText == null)
 				continue;
 
-			if (modSettings.orientation.equals("top-left")) {
-				this.leftTextList.add(modText);
-			} else {
-				this.rightTextList.add(modText);
+			if (modSettings.customPosition) {
+				modText.customPosition = true;
+				modText.customX = modSettings.customX;
+				modText.customY = modSettings.customY;
+				this.customPositionText.add(modText);
+			} else if (modSettings.orientation.equals("top-left")) {
+				this.topLeftText.add(modText);
+			} else if (modSettings.orientation.equals("top-right")) {
+				this.topRightText.add(modText);
+			} else if (modSettings.orientation.equals("bottom-right")) {
+				this.bottomRightText.add(modText);
 			}
 		}
 	}
@@ -59,20 +71,46 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 		int x = Config.horizontalMargin;
 		int y = Config.verticalMargin;
 
-		for (CustomText text : leftTextList) {
+		for (CustomText text : topLeftText) {
 			drawString(drawContext, text, x, y);
 
-			y += client.textRenderer.fontHeight + Config.lineHeight;
+			y += (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2) + Config.lineHeight;
 		}
 
 		y = Config.verticalMargin;
-		for (CustomText text : rightTextList) {
+		for (CustomText text : topRightText) {
 			int offset = (client.textRenderer.getWidth(text.text) - 1) + (Config.horizontalPadding * 2)
 					+ Config.horizontalMargin;
 			x = client.getWindow().getScaledWidth() - offset;
 			drawString(drawContext, text, x, y);
 
-			y += client.textRenderer.fontHeight + Config.lineHeight;
+			y += (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2) + Config.lineHeight;
+		}
+
+		y = client.getWindow().getScaledHeight() - Config.verticalMargin;
+		for (CustomText text : bottomRightText) {
+			int offset = (client.textRenderer.getWidth(text.text) - 1) + (Config.horizontalPadding * 2)
+					+ Config.horizontalMargin;
+			x = client.getWindow().getScaledWidth() - offset;
+
+			y -= (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2);
+
+			drawString(drawContext, text, x, y);
+
+			y -= Config.lineHeight;
+		}
+
+		for (CustomText text : customPositionText) {
+			float xPercent = text.customX / 100.0f;
+			float yPercent = text.customY / 100.0f;
+
+			int maxX = client.getWindow().getScaledWidth() - (Config.horizontalPadding * 2) - (client.textRenderer.getWidth(text.text) - 1);
+			int maxY = client.getWindow().getScaledHeight() - (Config.verticalPadding * 2) - (client.textRenderer.fontHeight - 1);
+
+			int scaledX = (int) (xPercent * maxX);
+			int scaledY = (int) (yPercent * maxY);
+
+			drawString(drawContext, text, scaledX, scaledY);
 		}
 	}
 

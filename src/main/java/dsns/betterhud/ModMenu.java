@@ -54,7 +54,7 @@ public class ModMenu implements ModMenuApi {
 
 			general.addEntry(entryBuilder
 					.startIntSlider(Text.literal("Line Height"), Config.lineHeight, 0, 40)
-					.setDefaultValue(8)
+					.setDefaultValue(1)
 					.setSaveConsumer(newValue -> Config.lineHeight = newValue)
 					.build());
 
@@ -82,9 +82,27 @@ public class ModMenu implements ModMenuApi {
 				category.addEntry(entryBuilder
 						.startStringDropdownMenu(Text.literal("Orientation"), Config.settings.get(modID).orientation)
 						.setDefaultValue(Config.getDefaults().get(modID).orientation)
-						.setSelections(Arrays.asList("top-left", "top-right"))
+						.setSelections(Arrays.asList("top-left", "top-right", "bottom-right"))
 						.setSuggestionMode(false)
 						.setSaveConsumer(newValue -> Config.settings.get(modID).orientation = newValue)
+						.build());
+
+				category.addEntry(entryBuilder
+						.startBooleanToggle(Text.literal("Custom Position"), Config.settings.get(modID).customPosition)
+						.setDefaultValue(Config.getDefaults().get(modID).customPosition)
+						.setSaveConsumer(newValue -> Config.settings.get(modID).customPosition = newValue)
+						.build());
+
+				category.addEntry(entryBuilder
+						.startIntSlider(Text.literal("Custom X"), Config.settings.get(modID).customX, 0, 100)
+						.setDefaultValue(Config.getDefaults().get(modID).customX)
+						.setSaveConsumer(newValue -> Config.settings.get(modID).customX = newValue)
+						.build());
+
+				category.addEntry(entryBuilder
+						.startIntSlider(Text.literal("Custom Y"), Config.settings.get(modID).customY, 0, 100)
+						.setDefaultValue(Config.getDefaults().get(modID).customY)
+						.setSaveConsumer(newValue -> Config.settings.get(modID).customY = newValue)
 						.build());
 			}
 
