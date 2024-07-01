@@ -67,7 +67,8 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 
 		y = Config.verticalMargin;
 		for (CustomText text : rightTextList) {
-			int offset = (client.textRenderer.getWidth(text.text) - 1) + (Config.horizontalPadding * 2) + Config.horizontalMargin;
+			int offset = (client.textRenderer.getWidth(text.text) - 1) + (Config.horizontalPadding * 2)
+					+ Config.horizontalMargin;
 			x = client.getWindow().getScaledWidth() - offset;
 			drawString(drawContext, text, x, y);
 
@@ -76,16 +77,11 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 	}
 
 	private void drawString(DrawContext drawContext, CustomText text, int x, int y) {
-		drawContext.fill(x, y, 
-				x + (client.textRenderer.getWidth(text.text) - 1) + (Config.horizontalPadding * 2), 
+		drawContext.fill(x, y,
+				x + (client.textRenderer.getWidth(text.text) - 1) + (Config.horizontalPadding * 2),
 				y + (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2), text.backgroundColor);
+
 		drawContext.drawText(client.textRenderer, text.text, x + Config.horizontalPadding, y + Config.verticalPadding,
 				text.color, true);
-		
-		// drawContext.fill(x - Config.horizontalPadding, y - Config.verticalPadding,
-		// 		x + this.client.textRenderer.getWidth(text.text) + Config.horizontalPadding,
-		// 		y + this.client.textRenderer.fontHeight + Config.verticalPadding - 1, text.backgroundColor);
-
-		// drawContext.drawText(this.client.textRenderer, text.text, x, y, text.color, true);
 	}
 }

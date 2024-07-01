@@ -33,6 +33,7 @@ public class Biome implements BaseMod {
 
 		String biomeString = formatSnakeCase(biome.get().getValue().getPath());
 
+		// used to maintain order when iterating
 		LinkedHashMap<String, Integer> biomeColors = new LinkedHashMap<>();
 		biomeColors.put("Bamboo", 0x32cd32);
 		biomeColors.put("Snowy", 0xffffff);
@@ -65,7 +66,6 @@ public class Biome implements BaseMod {
 		biomeColors.put("Desert", 0xffff00);
 		biomeColors.put("Beach", 0xffd700);
 		biomeColors.put("Hills", 0x2e8b57);
-
 
 		int color = 0xffffff; // default color
 
