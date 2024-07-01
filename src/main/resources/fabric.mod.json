@@ -3,9 +3,9 @@
 	"id": "betterhud",
 	"version": "${version}",
 	"name": "BetterHUD",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "A simple HUD with essential information easily accessible for Minecraft Fabric.",
 	"authors": [
-		"Me!"
+		"DSNS"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
@@ -15,8 +15,7 @@
 	"icon": "assets/betterhud/icon.png",
 	"environment": "client",
 	"entrypoints": {
-		"client": ["dsns.betterhud.BetterHUD"],
-		"modmenu": ["dsns.betterhud.ModMenu"]
+		"client": ["dsns.betterhud.BetterHUD"]
 	},
 	"mixins": [
 		"betterhud.mixins.json"

@@ -15,6 +15,8 @@ import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.biome.Biome;
 
 class CustomText {
@@ -66,7 +68,7 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 
 			Optional<RegistryKey<Biome>> biome = client.world.getBiome(player.getBlockPos()).getKey();
 			if (biome.isPresent()) {
-				String biomeString = BetterHUDGUI.formatBiomeName(biome.get().getValue().getPath());
+				String biomeString = BetterHUDGUI.formatSnakeCase(biome.get().getValue().getPath());
 
 				Map<String, Integer> biomeColors = new HashMap<>();
 				biomeColors.put("Ocean", 0x0000ff);
@@ -108,6 +110,16 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 				}
 
 				this.rightTextList.add(new CustomText(Text.literal(biomeString), color));
+
+				this.rightTextList.add(new CustomText(Text.literal(
+						BetterHUDGUI.formatSnakeCase(player.getHorizontalFacing().getName()))));
+
+				Vec3d currentPosition = player.getPos();
+				double travelledX = currentPosition.x - player.prevX;
+				double travelledZ = currentPosition.z - player.prevZ;
+				double currentSpeed = MathHelper.sqrt((float) (travelledX * travelledX + travelledZ * travelledZ))
+						/ 0.05F;
+				this.rightTextList.add(new CustomText(Text.literal(String.format("%.2f m/s", currentSpeed))));
 			}
 		}
 	}
@@ -152,7 +164,7 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 		drawContext.drawText(this.client.textRenderer, text.text, x, y, text.color, true);
 	}
 
-	public static String formatBiomeName(String biomeName) {
+	public static String formatSnakeCase(String biomeName) {
 		// Split the string by underscores
 		String[] words = biomeName.split("_");
 
