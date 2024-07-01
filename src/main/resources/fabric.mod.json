@@ -8,10 +8,9 @@
 		"DSNS"
 	],
 	"contact": {
-		"homepage": "https://dsns.dev",
-		"sources": "https://github.com/dsnsgithub/betterhud"
+		"homepage": "https://dsns.dev"
 	},
-	"license": "CC0-1.0",
+	"license": "AGPL-3.0",
 	"icon": "assets/betterhud/icon.png",
 	"environment": "client",
 	"entrypoints": {
