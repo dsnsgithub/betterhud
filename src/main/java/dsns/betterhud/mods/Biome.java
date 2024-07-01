@@ -4,7 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.RegistryKey;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,7 +33,7 @@ public class Biome implements BaseMod {
 
 		String biomeString = formatSnakeCase(biome.get().getValue().getPath());
 
-		HashMap<String, Integer> biomeColors = new HashMap<>();
+		LinkedHashMap<String, Integer> biomeColors = new LinkedHashMap<>();
 		biomeColors.put("Bamboo", 0x32cd32);
 		biomeColors.put("Snowy", 0xffffff);
 		biomeColors.put("Frozen", 0x87ceeb);
@@ -57,7 +57,10 @@ public class Biome implements BaseMod {
 		biomeColors.put("Dark Forest", 0x006400);
 		biomeColors.put("Forest", 0x228b22);
 		biomeColors.put("River", 0x4169e1);
-		biomeColors.put("Ocean", 0x0000ff);
+		biomeColors.put("Warm Ocean", 0x26d9ed);
+		biomeColors.put("Cold Ocean", 0x377de6);
+		biomeColors.put("Deep Ocean", 0x377de6);
+		biomeColors.put("Ocean", 0x34b1eb);
 		biomeColors.put("Plains", 0x00ff00);
 		biomeColors.put("Desert", 0xffff00);
 		biomeColors.put("Beach", 0xffd700);
