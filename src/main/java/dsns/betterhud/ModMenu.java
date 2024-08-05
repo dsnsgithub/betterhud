@@ -82,7 +82,7 @@ public class ModMenu implements ModMenuApi {
 				category.addEntry(entryBuilder
 						.startStringDropdownMenu(Text.literal("Orientation"), Config.settings.get(modID).orientation)
 						.setDefaultValue(Config.getDefaults().get(modID).orientation)
-						.setSelections(Arrays.asList("top-left", "top-right", "bottom-right"))
+						.setSelections(Arrays.asList("top-left", "top-right", "bottom-left", "bottom-right"))
 						.setSuggestionMode(false)
 						.setSaveConsumer(newValue -> Config.settings.get(modID).orientation = newValue)
 						.build());

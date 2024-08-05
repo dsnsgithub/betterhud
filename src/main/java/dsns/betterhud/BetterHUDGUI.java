@@ -18,6 +18,7 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 	private final MinecraftClient client = MinecraftClient.getInstance();
 	private final List<CustomText> topLeftText = new ObjectArrayList<>();
 	private final List<CustomText> topRightText = new ObjectArrayList<>();
+	private final List<CustomText> bottomLeftList = new ObjectArrayList<>();
 	private final List<CustomText> bottomRightText = new ObjectArrayList<>();
 	private final List<CustomText> customPositionText = new ObjectArrayList<>();
 
@@ -25,6 +26,7 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 	public void onStartTick(MinecraftClient client) {
 		this.topLeftText.clear();
 		this.topRightText.clear();
+		this.bottomLeftList.clear();
 		this.bottomRightText.clear();
 		this.customPositionText.clear();
 
@@ -55,6 +57,8 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 				this.topLeftText.add(modText);
 			} else if (modSettings.orientation.equals("top-right")) {
 				this.topRightText.add(modText);
+			} else if (modSettings.orientation.equals("bottom-left")) {
+				this.bottomLeftList.add(modText);
 			} else if (modSettings.orientation.equals("bottom-right")) {
 				this.bottomRightText.add(modText);
 			}
@@ -75,6 +79,14 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 			drawString(drawContext, text, x, y);
 
 			y += (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2) + Config.lineHeight;
+		}
+
+		y = client.getWindow().getScaledHeight() - Config.verticalMargin;
+
+		for (CustomText text : bottomLeftList) {
+			y -= (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2);
+			drawString(drawContext, text, x, y);
+			y -= Config.lineHeight;
 		}
 
 		y = Config.verticalMargin;
