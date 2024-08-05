@@ -1,7 +1,6 @@
 # BetterHUD Fabric Mod
 A simple HUD with essential information easily accessible for Minecraft Fabric.
-![Picture of HUD](https://cdn.modrinth.com/data/cached_images/40973618a91b04f51e5aaca6a4ee2b396aa26afe.png)
-
+![Picture of HUD](https://cdn.modrinth.com/data/cached_images/4dd33c9ed510e100af5cc442eb93092624856ba5.png)
 
 ## Features
 
@@ -11,10 +10,11 @@ A simple HUD with essential information easily accessible for Minecraft Fabric.
 - **Coordinates**: Displays the player's current coordinates.
 - **Biome**: Displays the current biome the player is in.
 - **Facing**: Displays the direction the player is facing.
+- **Time**: Displays the current real world time.
 
 ## Configuration (requires Mod Menu)
-![General Settings](https://cdn.modrinth.com/data/cached_images/7dc484e6eeaa2772097c6dc88085f138c68cebdb.png)
-![Mod Settings](https://cdn.modrinth.com/data/cached_images/0e227a2f97cded44f90fe51710994632046eac3d.png)
+![General Settings](https://cdn.modrinth.com/data/cached_images/9c3ed350ef0c2206a7439d1e1c15b708aa22a332.png)
+![Mod Settings](https://cdn.modrinth.com/data/cached_images/f89e15c258a5a24cfda8fe9398406a7ce16edbcc.png)
 ## Installation
 
 1. Ensure you have Fabric Mod Loader installed.
