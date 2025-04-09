@@ -15,7 +15,7 @@ public class Ping implements BaseMod {
 	public CustomText onStartTick(MinecraftClient client) {
 		PlayerEntity player = client.player;
 
-		if (player == null)
+		if (player == null || player.getUuid() == null || client.getNetworkHandler() == null || client.getNetworkHandler().getPlayerListEntry(player.getUuid()) == null)
 			return null;
 
 		return new CustomText(client.getNetworkHandler().getPlayerListEntry(player.getUuid()).getLatency() + " ms");

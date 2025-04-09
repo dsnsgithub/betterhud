@@ -15,7 +15,7 @@ public class Facing implements BaseMod {
 	public CustomText onStartTick(MinecraftClient client) {
 		PlayerEntity player = client.player;
 
-		if (player == null)
+		if (player == null || player.getHorizontalFacing() == null)
 			return null;
 
 		return new CustomText(formatSnakeCase(player.getHorizontalFacing().getName()));

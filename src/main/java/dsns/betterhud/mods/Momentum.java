@@ -17,7 +17,7 @@ public class Momentum implements BaseMod {
 	public CustomText onStartTick(MinecraftClient client) {
 		PlayerEntity player = client.player;
 
-		if (player == null)
+		if (player == null || player.getPos() == null)
 			return null;
 
 		Vec3d currentPosition = player.getPos();
