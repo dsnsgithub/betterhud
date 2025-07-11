@@ -21,8 +21,8 @@ public class Momentum implements BaseMod {
 			return null;
 
 		Vec3d currentPosition = player.getPos();
-		double travelledX = currentPosition.x - player.prevX;
-		double travelledZ = currentPosition.z - player.prevZ;
+		double travelledX = currentPosition.x - player.lastRenderX;
+		double travelledZ = currentPosition.z - player.lastRenderZ;
 		double currentSpeed = MathHelper.sqrt((float) (travelledX * travelledX + travelledZ * travelledZ)) / 0.05F;
 
 		return new CustomText(String.format("%.2f m/s", currentSpeed));
