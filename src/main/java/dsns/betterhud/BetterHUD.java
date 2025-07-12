@@ -4,7 +4,8 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.util.Identifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ public class BetterHUD implements ClientModInitializer {
 		Config.configure();
 
 		BetterHUDGUI betterHUDGUI = new BetterHUDGUI();
-		HudRenderCallback.EVENT.register(betterHUDGUI);
+		HudElementRegistry.addLast(Identifier.of("betterhud", "hud"), betterHUDGUI::onHudRender);
 		ClientTickEvents.START_CLIENT_TICK.register(betterHUDGUI);
 	}
 }

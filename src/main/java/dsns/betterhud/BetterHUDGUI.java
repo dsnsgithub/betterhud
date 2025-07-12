@@ -5,16 +5,14 @@ import java.util.List;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
-
 import dsns.betterhud.mods.*;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
 
-public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTick {
+public class BetterHUDGUI implements ClientTickEvents.StartTick {
 	private final MinecraftClient client = MinecraftClient.getInstance();
 	private final List<CustomText> topLeftText = new ObjectArrayList<>();
 	private final List<CustomText> topRightText = new ObjectArrayList<>();
@@ -65,7 +63,6 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 		}
 	}
 
-	@Override
 	public void onHudRender(DrawContext drawContext, RenderTickCounter tickCounter) {
 		if (client.getDebugHud().shouldShowDebugHud())
 			return;
@@ -116,8 +113,10 @@ public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTi
 			float xPercent = text.customX / 100.0f;
 			float yPercent = text.customY / 100.0f;
 
-			int maxX = client.getWindow().getScaledWidth() - (Config.horizontalPadding * 2) - (client.textRenderer.getWidth(text.text) - 1);
-			int maxY = client.getWindow().getScaledHeight() - (Config.verticalPadding * 2) - (client.textRenderer.fontHeight - 1);
+			int maxX = client.getWindow().getScaledWidth() - (Config.horizontalPadding * 2)
+					- (client.textRenderer.getWidth(text.text) - 1);
+			int maxY = client.getWindow().getScaledHeight() - (Config.verticalPadding * 2)
+					- (client.textRenderer.fontHeight - 1);
 
 			int scaledX = (int) (xPercent * maxX);
 			int scaledY = (int) (yPercent * maxY);

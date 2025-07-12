@@ -18,7 +18,7 @@ public class Facing implements BaseMod {
 		if (player == null || player.getHorizontalFacing() == null)
 			return null;
 
-		return new CustomText(formatSnakeCase(player.getHorizontalFacing().getName()));
+		return new CustomText(formatSnakeCase(player.getHorizontalFacing().name()));
 	}
 
 	public String formatSnakeCase(String biomeName) {

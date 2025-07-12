@@ -1,4 +1,5 @@
 package dsns.betterhud.util;
+import dsns.betterhud.Config;
 
 public class CustomText {
 	public String text;
@@ -15,10 +16,10 @@ public class CustomText {
 	}
 
 	public CustomText(String text) {
-		this(text, 0xffffffff, 0x88000000);
+		this(text, Config.textColor, Config.backgroundColor);
 	}
 
 	public CustomText(String text, int color) {
-		this(text, color, 0x88000000);
+		this(text, color, Config.backgroundColor);
 	}
 }
