@@ -3,7 +3,6 @@ package dsns.betterhud.mods;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
 
@@ -17,12 +16,11 @@ public class Momentum implements BaseMod {
 	public CustomText onStartTick(MinecraftClient client) {
 		PlayerEntity player = client.player;
 
-		if (player == null || player.getPos() == null)
+		if (player == null)
 			return null;
 
-		Vec3d currentPosition = player.getPos();
-		double travelledX = currentPosition.x - player.lastRenderX;
-		double travelledZ = currentPosition.z - player.lastRenderZ;
+		double travelledX = player.getX() - player.lastRenderX;
+		double travelledZ = player.getZ() - player.lastRenderZ;
 		double currentSpeed = MathHelper.sqrt((float) (travelledX * travelledX + travelledZ * travelledZ)) / 0.05F;
 
 		return new CustomText(String.format("%.2f m/s", currentSpeed));
