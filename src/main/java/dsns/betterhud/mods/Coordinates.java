@@ -4,11 +4,17 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
+import dsns.betterhud.util.ModSettings;
 
 public class Coordinates implements BaseMod {
 	@Override
 	public String getModID() {
 		return "Coordinates";
+	}
+	
+	@Override
+	public ModSettings getModSettings() {
+	    return new ModSettings("top-right");
 	}
 
 	@Override

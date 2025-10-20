@@ -10,11 +10,17 @@ import java.util.Optional;
 
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
+import dsns.betterhud.util.ModSettings;
 
 public class Biome implements BaseMod {
 	@Override
 	public String getModID() {
 		return "Biome";
+	}
+	
+	@Override
+	public ModSettings getModSettings() {
+	    return new ModSettings("top-right");
 	}
 
 	@Override
