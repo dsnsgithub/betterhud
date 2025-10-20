@@ -1,136 +1,179 @@
 package dsns.betterhud;
 
+import dsns.betterhud.util.BaseMod;
+import dsns.betterhud.util.CustomText;
+import dsns.betterhud.util.ModSettings;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.ArrayList;
 import java.util.List;
-
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
-import dsns.betterhud.mods.*;
-import dsns.betterhud.util.BaseMod;
-import dsns.betterhud.util.CustomText;
 
 public class BetterHUDGUI implements ClientTickEvents.StartTick {
-	private final MinecraftClient client = MinecraftClient.getInstance();
-	private final List<CustomText> topLeftText = new ObjectArrayList<>();
-	private final List<CustomText> topRightText = new ObjectArrayList<>();
-	private final List<CustomText> bottomLeftList = new ObjectArrayList<>();
-	private final List<CustomText> bottomRightText = new ObjectArrayList<>();
-	private final List<CustomText> customPositionText = new ObjectArrayList<>();
 
-	@Override
-	public void onStartTick(MinecraftClient client) {
-		this.topLeftText.clear();
-		this.topRightText.clear();
-		this.bottomLeftList.clear();
-		this.bottomRightText.clear();
-		this.customPositionText.clear();
+    public static int verticalPadding = 4;
+    public static int horizontalPadding = 4;
 
-		ArrayList<BaseMod> mods = new ArrayList<>();
-		mods.add(new FPS());
-		mods.add(new Ping());
-		mods.add(new Momentum());
-		mods.add(new Coordinates());
-		mods.add(new Biome());
-		mods.add(new Facing());
-		mods.add(new Time());
+    public static int verticalMargin = 1;
+    public static int horizontalMargin = 1;
 
-		for (BaseMod mod : mods) {
-			ModSettings modSettings = Config.settings.get(mod.getModID());
-			if (!modSettings.enabled)
-				continue;
+    public static int lineHeight = 1;
 
-			CustomText modText = mod.onStartTick(client);
-			if (modText == null)
-				continue;
+    private final MinecraftClient client = MinecraftClient.getInstance();
+    private final List<CustomText> topLeftText = new ObjectArrayList<>();
+    private final List<CustomText> topRightText = new ObjectArrayList<>();
+    private final List<CustomText> bottomLeftList = new ObjectArrayList<>();
+    private final List<CustomText> bottomRightText = new ObjectArrayList<>();
+    private final List<CustomText> customPositionText = new ObjectArrayList<>();
 
-			if (modSettings.customPosition) {
-				modText.customPosition = true;
-				modText.customX = modSettings.customX;
-				modText.customY = modSettings.customY;
-				this.customPositionText.add(modText);
-			} else if (modSettings.orientation.equals("top-left")) {
-				this.topLeftText.add(modText);
-			} else if (modSettings.orientation.equals("top-right")) {
-				this.topRightText.add(modText);
-			} else if (modSettings.orientation.equals("bottom-left")) {
-				this.bottomLeftList.add(modText);
-			} else if (modSettings.orientation.equals("bottom-right")) {
-				this.bottomRightText.add(modText);
-			}
-		}
-	}
+    private ArrayList<BaseMod> mods = new ArrayList<>();
 
-	public void onHudRender(DrawContext drawContext, RenderTickCounter tickCounter) {
-		if (client.getDebugHud().shouldShowDebugHud())
-			return;
-		if (client.options.hudHidden)
-			return;
+    public void instantiateMods(ArrayList<BaseMod> mods) {
+        this.mods = mods;
+    }
 
-		int x = Config.horizontalMargin;
-		int y = Config.verticalMargin;
+    @Override
+    public void onStartTick(MinecraftClient client) {
+        this.topLeftText.clear();
+        this.topRightText.clear();
+        this.bottomLeftList.clear();
+        this.bottomRightText.clear();
+        this.customPositionText.clear();
 
-		for (CustomText text : topLeftText) {
-			drawString(drawContext, text, x, y);
+        for (BaseMod mod : mods) {
+            ModSettings modSettings = mod.getModSettings();
+            if (!modSettings.getSetting("enabled").getBooleanValue()) continue;
 
-			y += (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2) + Config.lineHeight;
-		}
+            CustomText modText = mod.onStartTick(client);
+            if (modText == null) continue;
 
-		y = client.getWindow().getScaledHeight() - Config.verticalMargin;
+            String orientation = modSettings
+                .getSetting("orientation")
+                .getStringValue();
 
-		for (CustomText text : bottomLeftList) {
-			y -= (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2);
-			drawString(drawContext, text, x, y);
-			y -= Config.lineHeight;
-		}
+            if (modSettings.getSetting("customPosition").getBooleanValue()) {
+                modText.customPosition = true;
+                modText.customX = modSettings
+                    .getSetting("customX")
+                    .getIntValue();
+                modText.customY = modSettings
+                    .getSetting("customY")
+                    .getIntValue();
+                this.customPositionText.add(modText);
+            } else if (orientation.equals("top-left")) {
+                this.topLeftText.add(modText);
+            } else if (orientation.equals("top-right")) {
+                this.topRightText.add(modText);
+            } else if (orientation.equals("bottom-left")) {
+                this.bottomLeftList.add(modText);
+            } else if (orientation.equals("bottom-right")) {
+                this.bottomRightText.add(modText);
+            }
+        }
+    }
 
-		y = Config.verticalMargin;
-		for (CustomText text : topRightText) {
-			int offset = (client.textRenderer.getWidth(text.text) - 1) + (Config.horizontalPadding * 2)
-					+ Config.horizontalMargin;
-			x = client.getWindow().getScaledWidth() - offset;
-			drawString(drawContext, text, x, y);
+    public void onHudRender(
+        DrawContext drawContext,
+        RenderTickCounter tickCounter
+    ) {
+        if (client.getDebugHud().shouldShowDebugHud()) return;
+        if (client.options.hudHidden) return;
 
-			y += (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2) + Config.lineHeight;
-		}
+        int x = horizontalMargin;
+        int y = verticalMargin;
 
-		y = client.getWindow().getScaledHeight() - Config.verticalMargin;
-		for (CustomText text : bottomRightText) {
-			int offset = (client.textRenderer.getWidth(text.text) - 1) + (Config.horizontalPadding * 2)
-					+ Config.horizontalMargin;
-			x = client.getWindow().getScaledWidth() - offset;
+        for (CustomText text : topLeftText) {
+            drawString(drawContext, text, x, y);
 
-			y -= (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2);
+            y +=
+                (client.textRenderer.fontHeight - 1) +
+                (verticalPadding * 2) +
+                lineHeight;
+        }
 
-			drawString(drawContext, text, x, y);
+        y = client.getWindow().getScaledHeight() - verticalMargin;
 
-			y -= Config.lineHeight;
-		}
+        for (CustomText text : bottomLeftList) {
+            y -= (client.textRenderer.fontHeight - 1) + (verticalPadding * 2);
+            drawString(drawContext, text, x, y);
+            y -= lineHeight;
+        }
 
-		for (CustomText text : customPositionText) {
-			float xPercent = text.customX / 100.0f;
-			float yPercent = text.customY / 100.0f;
+        y = verticalMargin;
+        for (CustomText text : topRightText) {
+            int offset =
+                (client.textRenderer.getWidth(text.text) - 1) +
+                (horizontalPadding * 2) +
+                horizontalMargin;
+            x = client.getWindow().getScaledWidth() - offset;
+            drawString(drawContext, text, x, y);
 
-			int maxX = client.getWindow().getScaledWidth() - (Config.horizontalPadding * 2)
-					- (client.textRenderer.getWidth(text.text) - 1);
-			int maxY = client.getWindow().getScaledHeight() - (Config.verticalPadding * 2)
-					- (client.textRenderer.fontHeight - 1);
+            y +=
+                (client.textRenderer.fontHeight - 1) +
+                (verticalPadding * 2) +
+                lineHeight;
+        }
 
-			int scaledX = (int) (xPercent * maxX);
-			int scaledY = (int) (yPercent * maxY);
+        y = client.getWindow().getScaledHeight() - verticalMargin;
+        for (CustomText text : bottomRightText) {
+            int offset =
+                (client.textRenderer.getWidth(text.text) - 1) +
+                (horizontalPadding * 2) +
+                horizontalMargin;
+            x = client.getWindow().getScaledWidth() - offset;
 
-			drawString(drawContext, text, scaledX, scaledY);
-		}
-	}
+            y -= (client.textRenderer.fontHeight - 1) + (verticalPadding * 2);
 
-	private void drawString(DrawContext drawContext, CustomText text, int x, int y) {
-		drawContext.fill(x, y,
-				x + (client.textRenderer.getWidth(text.text) - 1) + (Config.horizontalPadding * 2),
-				y + (client.textRenderer.fontHeight - 1) + (Config.verticalPadding * 2), text.backgroundColor);
+            drawString(drawContext, text, x, y);
 
-		drawContext.drawText(client.textRenderer, text.text, x + Config.horizontalPadding, y + Config.verticalPadding,
-				text.color, true);
-	}
+            y -= lineHeight;
+        }
+
+        for (CustomText text : customPositionText) {
+            float xPercent = text.customX / 100.0f;
+            float yPercent = text.customY / 100.0f;
+
+            int maxX =
+                client.getWindow().getScaledWidth() -
+                (horizontalPadding * 2) -
+                (client.textRenderer.getWidth(text.text) - 1);
+            int maxY =
+                client.getWindow().getScaledHeight() -
+                (verticalPadding * 2) -
+                (client.textRenderer.fontHeight - 1);
+
+            int scaledX = (int) (xPercent * maxX);
+            int scaledY = (int) (yPercent * maxY);
+
+            drawString(drawContext, text, scaledX, scaledY);
+        }
+    }
+
+    private void drawString(
+        DrawContext drawContext,
+        CustomText text,
+        int x,
+        int y
+    ) {
+        drawContext.fill(
+            x,
+            y,
+            x +
+                (client.textRenderer.getWidth(text.text) - 1) +
+                (horizontalPadding * 2),
+            y + (client.textRenderer.fontHeight - 1) + (verticalPadding * 2),
+            text.backgroundColor
+        );
+
+        drawContext.drawText(
+            client.textRenderer,
+            text.text,
+            x + horizontalPadding,
+            y + verticalPadding,
+            text.color,
+            true
+        );
+    }
 }

@@ -1,36 +1,47 @@
 package dsns.betterhud.mods;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
+import dsns.betterhud.util.ModSettings;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;
 
 public class Facing implements BaseMod {
-	@Override
-	public String getModID() {
-		return "Facing";
-	}
 
-	@Override
-	public CustomText onStartTick(MinecraftClient client) {
-		PlayerEntity player = client.player;
+    @Override
+    public String getModID() {
+        return "Facing";
+    }
 
-		if (player == null || player.getHorizontalFacing() == null)
-			return null;
+    @Override
+    public ModSettings getModSettings() {
+        return new ModSettings("top-right");
+    }
 
-		return new CustomText(formatSnakeCase(player.getHorizontalFacing().name()));
-	}
+    @Override
+    public CustomText onStartTick(MinecraftClient client) {
+        PlayerEntity player = client.player;
 
-	public String formatSnakeCase(String biomeName) {
-		// Split the string by underscores
-		String[] words = biomeName.split("_");
+        if (player == null || player.getHorizontalFacing() == null) return null;
 
-		// Capitalize each word
-		for (int i = 0; i < words.length; i++) {
-			words[i] = words[i].substring(0, 1).toUpperCase() + words[i].substring(1).toLowerCase();
-		}
+        return new CustomText(
+            formatSnakeCase(player.getHorizontalFacing().name()),
+            getModSettings()
+        );
+    }
 
-		// Join the words with spaces
-		return String.join(" ", words);
-	}
+    public String formatSnakeCase(String biomeName) {
+        // Split the string by underscores
+        String[] words = biomeName.split("_");
+
+        // Capitalize each word
+        for (int i = 0; i < words.length; i++) {
+            words[i] =
+                words[i].substring(0, 1).toUpperCase() +
+                words[i].substring(1).toLowerCase();
+        }
+
+        // Join the words with spaces
+        return String.join(" ", words);
+    }
 }

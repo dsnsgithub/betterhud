@@ -59,11 +59,31 @@ public class Setting {
         return type;
     }
     
-    public String getValue() {
+    public String getStringValue() {
         return value;
+    }
+    
+    public int getIntValue() {
+        return Integer.parseInt(value);
+    }
+    
+    public double getDoubleValue() {
+        return Double.parseDouble(value);
+    }
+    
+    public int getColorValue() {
+        return Integer.parseInt(value);
+    }
+    
+    public boolean getBooleanValue() {
+        return Boolean.parseBoolean(value);
     }
     
     public String[] getPossibleValues() {
         return possibleValues;
+    }
+    
+    public void setValue(String value) {
+        this.value = value;
     }
 }

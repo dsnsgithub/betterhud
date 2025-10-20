@@ -3,6 +3,7 @@ package dsns.betterhud.util;
 import java.util.HashMap;
 
 public class ModSettings {
+
     private HashMap<String, Setting> settings = new HashMap<String, Setting>();
 
     public ModSettings() {
@@ -43,8 +44,16 @@ public class ModSettings {
             )
         );
     }
-    
+
     public HashMap<String, Setting> getSettings() {
         return settings;
+    }
+
+    public Setting getSetting(String key) {
+        return settings.get(key);
+    }
+
+    public void setSettings(HashMap<String, Setting> settings) {
+        this.settings = settings;
     }
 }
