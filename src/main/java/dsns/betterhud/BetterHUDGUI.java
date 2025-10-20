@@ -4,7 +4,6 @@ import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;

@@ -39,13 +39,28 @@ public class Coordinates implements BaseMod {
 
         if (player == null) return null;
 
-        String roundX = String.format("%.2f", player.getX());
-        String roundY = String.format("%.2f", player.getY());
-        String roundZ = String.format("%.2f", player.getZ());
+        
+        
+        if (SETTINGS.getSetting("decimal").getBooleanValue()) {
+            String roundX = String.format("%.2f", player.getX());
+            String roundY = String.format("%.2f", player.getY());
+            String roundZ = String.format("%.2f", player.getZ());
+            
+            return new CustomText(
+                roundX + ", " + roundY + ", " + roundZ,
+                getModSettings()
+            );
+        } else {
+            String roundX = String.format("%d", player.getX());
+            String roundY = String.format("%d", player.getY());
+            String roundZ = String.format("%d", player.getZ());
+            
+            return new CustomText(
+                roundX + ", " + roundY + ", " + roundZ,
+                getModSettings()
+            );
+        }
 
-        return new CustomText(
-            roundX + ", " + roundY + ", " + roundZ,
-            getModSettings()
-        );
+        
     }
 }

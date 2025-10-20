@@ -1,6 +1,5 @@
 package dsns.betterhud;
 
-import dsns.betterhud.ModMenu;
 import dsns.betterhud.mods.*;
 import dsns.betterhud.util.BaseMod;
 import java.util.ArrayList;

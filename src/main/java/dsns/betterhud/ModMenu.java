@@ -2,16 +2,13 @@ package dsns.betterhud;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
-import dsns.betterhud.BetterHUD;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.Setting;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import me.shedaniel.math.Color;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.text.Text;
 
