@@ -36,12 +36,15 @@ public class Setting {
             new String[] { String.valueOf(min), String.valueOf(max) }
         );
     }
-    
+
     public static Setting createColorSetting(int value) {
         return new Setting(
             String.valueOf(value),
             "color",
-            new String[] { String.valueOf(0x00000000), String.valueOf(0xffffffff) }
+            new String[] {
+                String.valueOf(0x00000000),
+                String.valueOf(0xffffffff),
+            }
         );
     }
 
@@ -56,39 +59,39 @@ public class Setting {
             new String[] { String.valueOf(min), String.valueOf(max) }
         );
     }
-    
+
     public String getType() {
         return type;
     }
-    
+
     public String getStringValue() {
         return value;
     }
-    
+
     public int getIntValue() {
         return Integer.parseInt(value);
     }
-    
+
     public double getDoubleValue() {
         return Double.parseDouble(value);
     }
-    
+
     public int getColorValue() {
         return Integer.parseInt(value);
     }
-    
+
     public boolean getBooleanValue() {
         return Boolean.parseBoolean(value);
     }
-    
+
     public String[] getPossibleValues() {
         return possibleValues;
     }
-    
+
     public String getDefaultValue() {
         return defaultValue;
     }
-    
+
     public void setValue(String value) {
         this.value = value;
     }
