@@ -4,10 +4,13 @@ import java.util.LinkedHashMap;
 
 public class ModSettings {
 
-    private LinkedHashMap<String, Setting> settings = new LinkedHashMap<String, Setting>();
+    private LinkedHashMap<String, Setting> settings = new LinkedHashMap<
+        String,
+        Setting
+    >();
 
     public ModSettings() {
-        settings.put("enabled", Setting.createBooleanSetting(true));
+        settings.put("Enabled", Setting.createBooleanSetting(true));
 
         settings.put(
             "Orientation",
@@ -26,7 +29,10 @@ public class ModSettings {
         settings.put("Custom X", Setting.createIntegerSetting(0, 0, 100));
         settings.put("Custom Y", Setting.createIntegerSetting(0, 0, 100));
         settings.put("Text Color", Setting.createColorSetting(0xffffffff));
-        settings.put("Background Color", Setting.createColorSetting(0x88000000));
+        settings.put(
+            "Background Color",
+            Setting.createColorSetting(0x88000000)
+        );
     }
 
     public ModSettings(String orientation) {

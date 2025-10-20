@@ -8,6 +8,8 @@ import net.minecraft.client.MinecraftClient;
 
 public class FPS implements BaseMod {
 
+    private static final ModSettings SETTINGS = new ModSettings("top-left");
+
     @Override
     public String getModID() {
         return "FPS";
@@ -15,7 +17,7 @@ public class FPS implements BaseMod {
 
     @Override
     public ModSettings getModSettings() {
-        return new ModSettings("top-left");
+        return SETTINGS;
     }
 
     @Override

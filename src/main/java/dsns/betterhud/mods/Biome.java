@@ -12,6 +12,8 @@ import net.minecraft.registry.RegistryKey;
 
 public class Biome implements BaseMod {
 
+    private static final ModSettings SETTINGS = new ModSettings("top-right");
+
     @Override
     public String getModID() {
         return "Biome";
@@ -19,7 +21,7 @@ public class Biome implements BaseMod {
 
     @Override
     public ModSettings getModSettings() {
-        return new ModSettings("top-right");
+        return SETTINGS;
     }
 
     @Override

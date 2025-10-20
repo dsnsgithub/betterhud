@@ -9,6 +9,8 @@ import net.minecraft.client.MinecraftClient;
 
 public class Time implements BaseMod {
 
+    private static final ModSettings SETTINGS = new ModSettings("bottom-right");
+
     @Override
     public String getModID() {
         return "Time";
@@ -16,7 +18,7 @@ public class Time implements BaseMod {
 
     @Override
     public ModSettings getModSettings() {
-        return new ModSettings("bottom-right");
+        return SETTINGS;
     }
 
     @Override

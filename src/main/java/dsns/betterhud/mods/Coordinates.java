@@ -19,6 +19,10 @@ class CoordinatesSettings extends ModSettings {
 
 public class Coordinates implements BaseMod {
 
+    private static final CoordinatesSettings SETTINGS = new CoordinatesSettings(
+        "top-right"
+    );
+
     @Override
     public String getModID() {
         return "Coordinates";
@@ -26,7 +30,7 @@ public class Coordinates implements BaseMod {
 
     @Override
     public ModSettings getModSettings() {
-        return new CoordinatesSettings("top-right");
+        return SETTINGS;
     }
 
     @Override

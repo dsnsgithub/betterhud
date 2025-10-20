@@ -8,6 +8,10 @@ import net.minecraft.entity.player.PlayerEntity;
 
 public class Facing implements BaseMod {
 
+    private static final CoordinatesSettings SETTINGS = new CoordinatesSettings(
+        "top-right"
+    );
+
     @Override
     public String getModID() {
         return "Facing";
@@ -15,7 +19,7 @@ public class Facing implements BaseMod {
 
     @Override
     public ModSettings getModSettings() {
-        return new ModSettings("top-right");
+        return SETTINGS;
     }
 
     @Override

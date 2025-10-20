@@ -9,6 +9,8 @@ import net.minecraft.util.math.MathHelper;
 
 public class Momentum implements BaseMod {
 
+    private static final ModSettings SETTINGS = new ModSettings("top-left");
+
     @Override
     public String getModID() {
         return "Momentum";
@@ -16,7 +18,7 @@ public class Momentum implements BaseMod {
 
     @Override
     public ModSettings getModSettings() {
-        return new ModSettings("top-right");
+        return SETTINGS;
     }
 
     @Override

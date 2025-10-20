@@ -8,6 +8,8 @@ import net.minecraft.entity.player.PlayerEntity;
 
 public class Ping implements BaseMod {
 
+    private static final ModSettings SETTINGS = new ModSettings("top-left");
+
     @Override
     public String getModID() {
         return "Ping";
@@ -15,7 +17,7 @@ public class Ping implements BaseMod {
 
     @Override
     public ModSettings getModSettings() {
-        return new ModSettings("top-left");
+        return SETTINGS;
     }
 
     @Override
