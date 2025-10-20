@@ -1,16 +1,16 @@
 package dsns.betterhud.util;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class ModSettings {
 
-    private HashMap<String, Setting> settings = new HashMap<String, Setting>();
+    private LinkedHashMap<String, Setting> settings = new LinkedHashMap<String, Setting>();
 
     public ModSettings() {
         settings.put("enabled", Setting.createBooleanSetting(true));
 
         settings.put(
-            "orientation",
+            "Orientation",
             Setting.createStringSetting(
                 "top-left",
                 new String[] {
@@ -22,17 +22,17 @@ public class ModSettings {
             )
         );
 
-        settings.put("customPosition", Setting.createBooleanSetting(false));
-        settings.put("customX", Setting.createIntegerSetting(0, 0, 100));
-        settings.put("customY", Setting.createIntegerSetting(0, 0, 100));
-        settings.put("textColor", Setting.createColorSetting(0xffffffff));
-        settings.put("backgroundColor", Setting.createColorSetting(0x00000000));
+        settings.put("Custom Position", Setting.createBooleanSetting(false));
+        settings.put("Custom X", Setting.createIntegerSetting(0, 0, 100));
+        settings.put("Custom Y", Setting.createIntegerSetting(0, 0, 100));
+        settings.put("Text Color", Setting.createColorSetting(0xffffffff));
+        settings.put("Background Color", Setting.createColorSetting(0x88000000));
     }
 
     public ModSettings(String orientation) {
-        super();
+        this();
         settings.replace(
-            "orientation",
+            "Orientation",
             Setting.createStringSetting(
                 orientation,
                 new String[] {
@@ -45,7 +45,7 @@ public class ModSettings {
         );
     }
 
-    public HashMap<String, Setting> getSettings() {
+    public LinkedHashMap<String, Setting> getSettings() {
         return settings;
     }
 
@@ -53,7 +53,7 @@ public class ModSettings {
         return settings.get(key);
     }
 
-    public void setSettings(HashMap<String, Setting> settings) {
+    public void setSettings(LinkedHashMap<String, Setting> settings) {
         this.settings = settings;
     }
 }

@@ -18,8 +18,8 @@ public class CustomText {
     public CustomText(String text, ModSettings settings) {
         this(
             text,
-            settings.getSetting("textColor").getColorValue(),
-            settings.getSetting("backgroundColor").getColorValue()
+            settings.getSetting("Text Color").getColorValue(),
+            settings.getSetting("Background Color").getColorValue()
         );
     }
 
@@ -27,7 +27,7 @@ public class CustomText {
         this(
             text,
             color,
-            settings.getSetting("backgroundColor").getColorValue()
+            settings.getSetting("Background Color").getColorValue()
         );
     }
 }

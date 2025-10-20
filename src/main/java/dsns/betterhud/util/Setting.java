@@ -4,11 +4,13 @@ public class Setting {
 
     private String value;
     private String type;
+    private final String defaultValue;
     private String[] possibleValues;
 
     public Setting(String value, String type, String[] possibleValues) {
         this.value = value;
         this.type = type;
+        this.defaultValue = value;
         this.possibleValues = possibleValues;
     }
 
@@ -81,6 +83,10 @@ public class Setting {
     
     public String[] getPossibleValues() {
         return possibleValues;
+    }
+    
+    public String getDefaultValue() {
+        return defaultValue;
     }
     
     public void setValue(String value) {

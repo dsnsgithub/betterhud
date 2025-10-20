@@ -1,5 +1,6 @@
 package dsns.betterhud;
 
+import dsns.betterhud.ModMenu;
 import dsns.betterhud.mods.*;
 import dsns.betterhud.util.BaseMod;
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class BetterHUD implements ClientModInitializer {
     // That way, it's clear which mod wrote info, warnings, and errors.
     public static final Logger LOGGER = LoggerFactory.getLogger("betterhud");
 
-    ArrayList<BaseMod> mods = new ArrayList<>(
+    public static ArrayList<BaseMod> mods = new ArrayList<>(
         Arrays.asList(
             new FPS(),
             new Ping(),
@@ -35,9 +36,10 @@ public class BetterHUD implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        Config.configure(mods);
+        Config.configure();
 
         BetterHUDGUI betterHUDGUI = new BetterHUDGUI();
+
         HudElementRegistry.addLast(
             Identifier.of("betterhud", "hud"),
             betterHUDGUI::onHudRender

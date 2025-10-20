@@ -28,12 +28,6 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     private final List<CustomText> bottomRightText = new ObjectArrayList<>();
     private final List<CustomText> customPositionText = new ObjectArrayList<>();
 
-    private ArrayList<BaseMod> mods = new ArrayList<>();
-
-    public void instantiateMods(ArrayList<BaseMod> mods) {
-        this.mods = mods;
-    }
-
     @Override
     public void onStartTick(MinecraftClient client) {
         this.topLeftText.clear();
@@ -42,24 +36,26 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         this.bottomRightText.clear();
         this.customPositionText.clear();
 
-        for (BaseMod mod : mods) {
+        for (BaseMod mod : BetterHUD.mods) {
             ModSettings modSettings = mod.getModSettings();
-            if (!modSettings.getSetting("enabled").getBooleanValue()) continue;
+            if (!modSettings.getSetting("Enabled").getBooleanValue()) continue;
+            System.out.println(modSettings.getSetting("Enabled").getBooleanValue());
 
             CustomText modText = mod.onStartTick(client);
+            System.out.println(modText);
             if (modText == null) continue;
 
             String orientation = modSettings
-                .getSetting("orientation")
+                .getSetting("Orientation")
                 .getStringValue();
 
-            if (modSettings.getSetting("customPosition").getBooleanValue()) {
+            if (modSettings.getSetting("Custom Position").getBooleanValue()) {
                 modText.customPosition = true;
                 modText.customX = modSettings
-                    .getSetting("customX")
+                    .getSetting("Custom X")
                     .getIntValue();
                 modText.customY = modSettings
-                    .getSetting("customY")
+                    .getSetting("Custom Y")
                     .getIntValue();
                 this.customPositionText.add(modText);
             } else if (orientation.equals("top-left")) {
