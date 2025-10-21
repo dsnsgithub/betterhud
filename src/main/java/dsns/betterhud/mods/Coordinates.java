@@ -70,9 +70,9 @@ public class Coordinates implements BaseMod {
                 getModSettings()
             );
         } else {
-            int x = (int) player.getX();
-            int y = (int) player.getY();
-            int z = (int) player.getZ();
+            int x = player.getBlockX();
+            int y = player.getBlockY();
+            int z = player.getBlockZ();
 
             return new CustomText(x + ", " + y + ", " + z, getModSettings());
         }
