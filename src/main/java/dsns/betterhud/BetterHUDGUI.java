@@ -6,11 +6,13 @@ import dsns.betterhud.util.ModSettings;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
 
-public class BetterHUDGUI implements ClientTickEvents.StartTick {
+public class BetterHUDGUI
+    implements HudRenderCallback, ClientTickEvents.StartTick {
 
     public static int verticalPadding = 4;
     public static int horizontalPadding = 4;
