@@ -1,158 +1,154 @@
 package dsns.betterhud;
 
+import dsns.betterhud.util.BaseMod;
+import dsns.betterhud.util.ModSettings;
+import dsns.betterhud.util.Setting;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
-
 import net.fabricmc.loader.api.FabricLoader;
 
-class ModSettings {
-	public String orientation;
-	public boolean enabled;
-	public boolean customPosition;
-	public int customX;
-	public int customY;
-
-	public ModSettings(String orientation, boolean enabled, boolean customPosition, int customX, int customY) {
-		this.orientation = orientation;
-		this.enabled = enabled;
-		this.customPosition = customPosition;
-		this.customX = customX;
-		this.customY = customY;
-	}
-
-	public ModSettings(String orientation) {
-		this(orientation, true, false, 0, 0);
-	}
-
-	public ModSettings() {
-		this("top-left", true, false, 0, 0);
-	}
-}
-
 public class Config {
-	public static int verticalPadding = 4;
-	public static int horizontalPadding = 4;
 
-	public static int verticalMargin = 1;
-	public static int horizontalMargin = 1;
+    private static final Path configPath = FabricLoader.getInstance()
+        .getConfigDir()
+        .resolve("betterhud.properties");
 
-	public static int lineHeight = 1;
+    private static HashMap<String, ModSettings> settings = new HashMap<>();
 
-	public static int textColor = 0xffffffff;
-	public static int backgroundColor = 0x88000000;
+    public static void configure() {
+        if (settings.isEmpty()) {
+            for (BaseMod mod : BetterHUD.mods) {
+                settings.put(mod.getModID(), mod.getModSettings());
+            }
+        }
 
-	public static HashMap<String, ModSettings> settings = new HashMap<String, ModSettings>();
+        if (Files.exists(configPath)) {
+            deserialize();
+        } else {
+            serialize();
+        }
+    }
 
-	private static final Path configPath = FabricLoader.getInstance().getConfigDir()
-			.resolve("betterhud.properties");
+    private static String titleCaseToCamelCase(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            return title;
+        }
 
-	public static HashMap<String, ModSettings> getDefaults() {
-		HashMap<String, ModSettings> defaults = new HashMap<String, ModSettings>();
+        String[] words = title.trim().split("\\s+");
+        if (words.length == 0) {
+            return "";
+        }
 
-		defaults.put("FPS", new ModSettings("top-left"));
-		defaults.put("Ping", new ModSettings("top-left"));
-		defaults.put("Momentum", new ModSettings("top-left"));
-		defaults.put("Coordinates", new ModSettings("top-right"));
-		defaults.put("Biome", new ModSettings("top-right"));
-		defaults.put("Facing", new ModSettings("top-right"));
-		defaults.put("Time", new ModSettings("bottom-right"));
+        StringBuilder result = new StringBuilder(words[0].toLowerCase());
 
-		return defaults;
-	}
+        for (int i = 1; i < words.length; i++) {
+            String word = words[i];
+            if (!word.isEmpty()) {
+                String camelWord =
+                    word.substring(0, 1).toUpperCase() +
+                    word.substring(1).toLowerCase();
+                result.append(camelWord);
+            }
+        }
 
-	public static void configure() {
-		if (settings.size() == 0) {
-			settings = getDefaults();
-		}
+        return result.toString();
+    }
 
-		if (Files.exists(configPath)) {
-			deserialize();
-		} else {
-			serialize();
-		}
-	}
+    public static void serialize() {
+        Properties prop = new Properties();
+        HashMap<String, String> serialized = new HashMap<String, String>();
 
-	public static void serialize() {
-		Properties prop = new Properties();
-		for (String modID : settings.keySet()) {
-			ModSettings modSettings = settings.get(modID);
-			prop.setProperty(modID + ".enabled", String.valueOf(modSettings.enabled));
-			prop.setProperty(modID + ".orientation", modSettings.orientation);
-			prop.setProperty(modID + ".customPosition", String.valueOf(modSettings.customPosition));
-			prop.setProperty(modID + ".customX", String.valueOf(modSettings.customX));
-			prop.setProperty(modID + ".customY", String.valueOf(modSettings.customY));
-		}
+        for (Map.Entry<String, ModSettings> entry : settings.entrySet()) {
+            ModSettings modSettings = entry.getValue();
 
-		prop.setProperty("verticalPadding", String.valueOf(Config.verticalPadding));
-		prop.setProperty("horizontalPadding" + "", String.valueOf(Config.horizontalPadding));
-		prop.setProperty("verticalMargin", String.valueOf(Config.verticalMargin));
-		prop.setProperty("horizontalMargin" + "", String.valueOf(Config.horizontalMargin));
-		prop.setProperty("lineHeight", String.valueOf(Config.lineHeight));
-		prop.setProperty("textColor", String.valueOf(Config.textColor));
-		prop.setProperty("backgroundColor", String.valueOf(Config.backgroundColor));
+            for (Map.Entry<String, Setting> settingEntry : modSettings
+                .getSettings()
+                .entrySet()) {
+                serialized.put(
+                    entry.getKey() + "." + settingEntry.getKey(),
+                    settingEntry.getValue().getStringValue()
+                );
+            }
+        }
 
-		try {
-			prop.store(Files.newOutputStream(configPath), null);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+        prop.putAll(serialized);
 
-	public static void deserialize() {
-		Properties prop = new Properties();
-		try {
-			prop.load(Files.newInputStream(configPath));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+        try {
+            prop.store(Files.newOutputStream(configPath), null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-		for (String modID : settings.keySet()) {
-			ModSettings modSettings = settings.get(modID);
-			modSettings.enabled = getBooleanProperty(prop, modID + ".enabled", modSettings.enabled);
-			modSettings.orientation = getStringProperty(prop, modID + ".orientation", modSettings.orientation);
-			modSettings.customPosition = getBooleanProperty(prop, modID + ".customPosition",
-					modSettings.customPosition);
-			modSettings.customX = getIntProperty(prop, modID + ".customX", modSettings.customX);
-			modSettings.customY = getIntProperty(prop, modID + ".customY", modSettings.customY);
-		}
+    public static void deserialize() {
+        Properties prop = new Properties();
+        try {
+            prop.load(Files.newInputStream(configPath));
+        } catch (Exception e) {
+            System.err.println("Failed to load config: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
 
-		Config.verticalPadding = getIntProperty(prop, "verticalPadding", Config.verticalPadding);
-		Config.horizontalPadding = getIntProperty(prop, "horizontalPadding", Config.horizontalPadding);
-		Config.verticalMargin = getIntProperty(prop, "verticalMargin", Config.verticalMargin);
-		Config.horizontalMargin = getIntProperty(prop, "horizontalMargin", Config.horizontalMargin);
-		Config.lineHeight = getIntProperty(prop, "lineHeight", Config.lineHeight);
-		Config.textColor = getIntProperty(prop, "textColor", Config.textColor);
-		Config.backgroundColor = getIntProperty(prop, "backgroundColor", Config.backgroundColor);
+        Map<String, String> map = new HashMap<String, String>();
+        for (final String name : prop.stringPropertyNames()) {
+            map.put(name, prop.getProperty(name));
+        }
 
-		serialize();
-	}
+        for (Map.Entry<String, ModSettings> modEntry : settings.entrySet()) {
+            String modID = modEntry.getKey();
+            ModSettings modSetting = modEntry.getValue();
 
-	private static String getStringProperty(Properties prop, String key, String defaultValue) {
-		try {
-			String value = prop.getProperty(key);
-			return (value != null) ? value : defaultValue;
-		} catch (Exception e) {
-			return defaultValue;
-		}
-	}
+            for (Map.Entry<String, Setting> entry : modSetting
+                .getSettings()
+                .entrySet()) {
+                String fullKey = modID + "." + entry.getKey();
+                String oldConfigKey =
+                    modID + "." + titleCaseToCamelCase(entry.getKey());
 
-	private static int getIntProperty(Properties prop, String key, int defaultValue) {
-		try {
-			String value = prop.getProperty(key);
-			return (value != null) ? Integer.parseInt(value) : defaultValue;
-		} catch (Exception e) {
-			return defaultValue;
-		}
-	}
+                String val = map.get(fullKey);
+                String oldVal = map.get(oldConfigKey);
+                if (val != null) {
+                    entry.getValue().setValue(val);
+                } else if (oldVal != null) {
+                    entry.getValue().setValue(oldVal);
+                }
+            }
+        }
 
-	private static boolean getBooleanProperty(Properties prop, String key, boolean defaultValue) {
-		try {
-			String value = prop.getProperty(key);
-			return (value != null) ? Boolean.parseBoolean(value) : defaultValue;
-		} catch (Exception e) {
-			return defaultValue;
-		}
-	}
+        String globalBg = map.get("backgroundColor");
+        if (globalBg != null) {
+            for (Map.Entry<
+                String,
+                ModSettings
+            > modEntry : settings.entrySet()) {
+                Setting bgSetting = modEntry
+                    .getValue()
+                    .getSetting("Background Color");
+                if (bgSetting != null) {
+                    bgSetting.setValue(globalBg);
+                }
+            }
+        }
+
+        String globalText = map.get("textColor");
+        if (globalText != null) {
+            for (Map.Entry<
+                String,
+                ModSettings
+            > modEntry : settings.entrySet()) {
+                Setting textSetting = modEntry
+                    .getValue()
+                    .getSetting("Text Color");
+                if (textSetting != null) {
+                    textSetting.setValue(globalText);
+                }
+            }
+        }
+
+        serialize();
+    }
 }
