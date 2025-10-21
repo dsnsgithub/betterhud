@@ -8,7 +8,7 @@ import net.minecraft.entity.player.PlayerEntity;
 
 public class Facing implements BaseMod {
 
-    private static final CoordinatesSettings SETTINGS = new CoordinatesSettings(
+    private static final ModSettings SETTINGS = new ModSettings(
         "top-right"
     );
 
