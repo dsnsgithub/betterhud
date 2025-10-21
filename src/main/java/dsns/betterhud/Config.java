@@ -32,6 +32,31 @@ public class Config {
         }
     }
 
+    private static String titleCaseToCamelCase(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            return title;
+        }
+
+        String[] words = title.trim().split("\\s+");
+        if (words.length == 0) {
+            return "";
+        }
+
+        StringBuilder result = new StringBuilder(words[0].toLowerCase());
+
+        for (int i = 1; i < words.length; i++) {
+            String word = words[i];
+            if (!word.isEmpty()) {
+                String camelWord =
+                    word.substring(0, 1).toUpperCase() +
+                    word.substring(1).toLowerCase();
+                result.append(camelWord);
+            }
+        }
+
+        return result.toString();
+    }
+
     public static void serialize() {
         Properties prop = new Properties();
         HashMap<String, String> serialized = new HashMap<String, String>();
@@ -73,7 +98,6 @@ public class Config {
             map.put(name, prop.getProperty(name));
         }
 
-        int updatedCount = 0;
         for (Map.Entry<String, ModSettings> modEntry : settings.entrySet()) {
             String modID = modEntry.getKey();
             ModSettings modSetting = modEntry.getValue();
@@ -82,10 +106,15 @@ public class Config {
                 .getSettings()
                 .entrySet()) {
                 String fullKey = modID + "." + entry.getKey();
+                String oldConfigKey =
+                    modID + "." + titleCaseToCamelCase(entry.getKey());
+
                 String val = map.get(fullKey);
+                String oldVal = map.get(oldConfigKey);
                 if (val != null) {
                     entry.getValue().setValue(val);
-                    updatedCount++;
+                } else if (oldVal != null) {
+                    entry.getValue().setValue(oldVal);
                 }
             }
         }
@@ -101,13 +130,8 @@ public class Config {
                     .getSetting("Background Color");
                 if (bgSetting != null) {
                     bgSetting.setValue(globalBg);
-                    updatedCount++;
                 }
             }
-            System.out.println(
-                // Remove this debug line in release
-                "Migrated global backgroundColor to all mods: " + globalBg
-            );
         }
 
         String globalText = map.get("textColor");
@@ -121,18 +145,10 @@ public class Config {
                     .getSetting("Text Color");
                 if (textSetting != null) {
                     textSetting.setValue(globalText);
-                    updatedCount++;
                 }
             }
-            System.out.println(
-                // Remove this debug line in release
-                "Migrated global textColor to all mods: " + globalText
-            );
         }
 
-        // Ignore other old globals (e.g., horizontalMargin) unless you map them to specific settings
-
-        System.out.println("Deserialized " + updatedCount + " settings."); // Remove this debug line in release
-        serialize(); // Re-save with migrated values
+        serialize();
     }
 }

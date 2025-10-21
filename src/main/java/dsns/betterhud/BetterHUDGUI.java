@@ -38,12 +38,8 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         for (BaseMod mod : BetterHUD.mods) {
             ModSettings modSettings = mod.getModSettings();
             if (!modSettings.getSetting("Enabled").getBooleanValue()) continue;
-            System.out.println(
-                modSettings.getSetting("Enabled").getBooleanValue()
-            );
 
             CustomText modText = mod.onStartTick(client);
-            System.out.println(modText);
             if (modText == null) continue;
 
             String orientation = modSettings
