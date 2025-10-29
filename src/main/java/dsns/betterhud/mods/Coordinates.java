@@ -4,37 +4,18 @@ import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
 import dsns.betterhud.util.Setting;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 
 class CoordinatesSettings extends ModSettings {
 
-    public CoordinatesSettings(String position) {
-        super(position);
-        LinkedHashMap<String, Setting> settings = super.getSettings();
-
-        List<Map.Entry<String, Setting>> entries = new ArrayList<>(
-            settings.entrySet()
+    public CoordinatesSettings(String orientation) {
+        super(orientation);
+        insertSettingAfter(
+            "Orientation",
+            "Decimal",
+            Setting.createBooleanSetting(false)
         );
-        settings.clear();
-
-        int insertIndex = 2;
-
-        for (int i = 0; i < Math.min(insertIndex, entries.size()); i++) {
-            Map.Entry<String, Setting> entry = entries.get(i);
-            settings.put(entry.getKey(), entry.getValue());
-        }
-
-        settings.put("Decimal", Setting.createBooleanSetting(false));
-
-        for (int i = insertIndex; i < entries.size(); i++) {
-            Map.Entry<String, Setting> entry = entries.get(i);
-            settings.put(entry.getKey(), entry.getValue());
-        }
     }
 }
 
