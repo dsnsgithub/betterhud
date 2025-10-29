@@ -37,7 +37,7 @@ public class ModSettings {
         this();
         Setting orientationSetting = settings.get("Orientation");
         if (orientationSetting != null) {
-            orientationSetting.setValue(orientation);
+            orientationSetting.setDefaultValue(orientation);
         }
     }
 

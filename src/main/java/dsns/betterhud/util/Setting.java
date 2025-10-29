@@ -4,7 +4,7 @@ public class Setting {
 
     private String value;
     private String type;
-    private final String defaultValue;
+    private String defaultValue;
     private String[] possibleValues;
 
     public Setting(String value, String type, String[] possibleValues) {
@@ -94,5 +94,9 @@ public class Setting {
 
     public void setValue(String value) {
         this.value = value;
+    }
+    
+    public void setDefaultValue(String value) {
+        this.defaultValue = value;
     }
 }
