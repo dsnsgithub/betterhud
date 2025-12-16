@@ -1,5 +1,7 @@
 # BetterHUD Fabric Mod
-## [Download on Modrinth!](https://modrinth.com/mod/betterhudfabric)
+![Modrinth Downloads](https://img.shields.io/modrinth/dt/betterhudfabric?style=for-the-badge&logo=modrinth)
+
+
 A simple HUD with essential information easily accessible for Minecraft Fabric. 
 ![Picture of HUD](https://cdn.modrinth.com/data/cached_images/4dd33c9ed510e100af5cc442eb93092624856ba5.png)
 
