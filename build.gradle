@@ -17,18 +17,6 @@ repositories {
     maven { url "https://maven.terraformersmc.com/releases/" }
 }
 
-loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"betterhud" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
-	}
-
-}
-
 configurations.configureEach {
 	if (name.toLowerCase().contains('annotationprocessor')) {
 		exclude group: 'org.ow2.asm'
