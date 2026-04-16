@@ -29,6 +29,12 @@ loom {
 
 }
 
+configurations.configureEach {
+	if (name.toLowerCase().contains('annotationprocessor')) {
+		exclude group: 'org.ow2.asm'
+	}
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"

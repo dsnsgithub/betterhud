@@ -8,7 +8,7 @@ import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class BetterHUDGUI implements ClientTickEvents.StartTick {
 
@@ -68,7 +68,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     }
 
     public void onHudRender(
-        GuiGraphics drawContext,
+        GuiGraphicsExtractor drawContext,
         DeltaTracker tickCounter
     ) {
         if (client.getDebugOverlay().showDebugScreen()) return;
@@ -145,7 +145,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     }
 
     private void drawString(
-        GuiGraphics drawContext,
+        GuiGraphicsExtractor drawContext,
         CustomText text,
         int x,
         int y
@@ -160,7 +160,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             text.backgroundColor
         );
 
-        drawContext.drawString(
+        drawContext.text(
             client.font,
             text.text,
             x + horizontalPadding,
