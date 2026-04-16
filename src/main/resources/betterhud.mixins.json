@@ -1,10 +1,8 @@
 {
 	"required": true,
 	"package": "dsns.betterhud.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"client": [
-		"MinecraftClientAccessor"
-	],
+	"compatibilityLevel": "JAVA_25",
+	"client": [],
 	"injectors": {
 		"defaultRequire": 1
 	},

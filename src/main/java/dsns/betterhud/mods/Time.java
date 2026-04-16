@@ -5,7 +5,7 @@ import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 public class Time implements BaseMod {
 
@@ -22,7 +22,7 @@ public class Time implements BaseMod {
     }
 
     @Override
-    public CustomText onStartTick(MinecraftClient client) {
+    public CustomText onStartTick(Minecraft client) {
         LocalTime currentTime = LocalTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a");
         String formattedTime = currentTime.format(formatter);
