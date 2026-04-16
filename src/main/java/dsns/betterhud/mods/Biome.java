@@ -34,7 +34,7 @@ public class Biome implements BaseMod {
 
         if (!biome.unwrapKey().isPresent()) return null;
 
-        String biomeString = formatSnakeCase(biome.getRegisteredName());
+        String biomeString = formatSnakeCase(biome.getRegisteredName().replace("minecraft:", ""));
 
         // used to maintain order when iterating
         LinkedHashMap<String, Integer> biomeColors = new LinkedHashMap<>();

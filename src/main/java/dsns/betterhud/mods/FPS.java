@@ -1,6 +1,5 @@
 package dsns.betterhud.mods;
 
-import dsns.betterhud.mixin.MinecraftClientAccessor;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
@@ -22,7 +21,7 @@ public class FPS implements BaseMod {
 
     @Override
     public CustomText onStartTick(Minecraft client) {
-        int currentFPS = MinecraftClientAccessor.getCurrentFPS();
+        int currentFPS = client.getFps();
 
         return new CustomText(currentFPS + " FPS", getModSettings());
     }
