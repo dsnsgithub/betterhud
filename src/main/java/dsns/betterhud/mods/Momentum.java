@@ -3,9 +3,9 @@ package dsns.betterhud.mods;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 
 public class Momentum implements BaseMod {
 
@@ -22,15 +22,15 @@ public class Momentum implements BaseMod {
     }
 
     @Override
-    public CustomText onStartTick(MinecraftClient client) {
-        PlayerEntity player = client.player;
+    public CustomText onStartTick(Minecraft client) {
+        Player player = client.player;
 
         if (player == null) return null;
 
-        double travelledX = player.getX() - player.lastRenderX;
-        double travelledZ = player.getZ() - player.lastRenderZ;
+        double travelledX = player.getX() - player.xo;
+        double travelledZ = player.getZ() - player.zo;
         double currentSpeed =
-            MathHelper.sqrt(
+            Mth.sqrt(
                 (float) (travelledX * travelledX + travelledZ * travelledZ)
             ) /
             0.05F;

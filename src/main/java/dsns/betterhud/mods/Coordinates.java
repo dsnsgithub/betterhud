@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.player.Player;
 
 class CoordinatesSettings extends ModSettings {
 
@@ -55,8 +55,8 @@ public class Coordinates implements BaseMod {
     }
 
     @Override
-    public CustomText onStartTick(MinecraftClient client) {
-        PlayerEntity player = client.player;
+    public CustomText onStartTick(Minecraft client) {
+        Player player = client.player;
 
         if (player == null) return null;
 

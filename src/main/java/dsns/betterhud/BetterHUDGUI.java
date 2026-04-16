@@ -6,9 +6,9 @@ import dsns.betterhud.util.ModSettings;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class BetterHUDGUI implements ClientTickEvents.StartTick {
 
@@ -20,7 +20,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
 
     public static int lineHeight = 1;
 
-    private final MinecraftClient client = MinecraftClient.getInstance();
+    private final Minecraft client = Minecraft.getInstance();
     private final List<CustomText> topLeftText = new ObjectArrayList<>();
     private final List<CustomText> topRightText = new ObjectArrayList<>();
     private final List<CustomText> bottomLeftList = new ObjectArrayList<>();
@@ -28,7 +28,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     private final List<CustomText> customPositionText = new ObjectArrayList<>();
 
     @Override
-    public void onStartTick(MinecraftClient client) {
+    public void onStartTick(Minecraft client) {
         this.topLeftText.clear();
         this.topRightText.clear();
         this.bottomLeftList.clear();
@@ -68,58 +68,58 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     }
 
     public void onHudRender(
-        DrawContext drawContext,
-        RenderTickCounter tickCounter
+        GuiGraphicsExtractor graphics,
+        DeltaTracker deltaTracker
     ) {
-        if (client.getDebugHud().shouldShowDebugHud()) return;
-        if (client.options.hudHidden) return;
+        if (client.getDebugOverlay().showDebugScreen()) return;
+        if (client.options.hideGui) return;
 
         int x = horizontalMargin;
         int y = verticalMargin;
 
         for (CustomText text : topLeftText) {
-            drawString(drawContext, text, x, y);
+            drawString(graphics, text, x, y);
 
             y +=
-                (client.textRenderer.fontHeight - 1) +
+                (client.font.lineHeight - 1) +
                 (verticalPadding * 2) +
                 lineHeight;
         }
 
-        y = client.getWindow().getScaledHeight() - verticalMargin;
+        y = client.getWindow().getGuiScaledHeight() - verticalMargin;
 
         for (CustomText text : bottomLeftList) {
-            y -= (client.textRenderer.fontHeight - 1) + (verticalPadding * 2);
-            drawString(drawContext, text, x, y);
+            y -= (client.font.lineHeight - 1) + (verticalPadding * 2);
+            drawString(graphics, text, x, y);
             y -= lineHeight;
         }
 
         y = verticalMargin;
         for (CustomText text : topRightText) {
             int offset =
-                (client.textRenderer.getWidth(text.text) - 1) +
+                (client.font.width(text.text) - 1) +
                 (horizontalPadding * 2) +
                 horizontalMargin;
-            x = client.getWindow().getScaledWidth() - offset;
-            drawString(drawContext, text, x, y);
+            x = client.getWindow().getGuiScaledWidth() - offset;
+            drawString(graphics, text, x, y);
 
             y +=
-                (client.textRenderer.fontHeight - 1) +
+                (client.font.lineHeight - 1) +
                 (verticalPadding * 2) +
                 lineHeight;
         }
 
-        y = client.getWindow().getScaledHeight() - verticalMargin;
+        y = client.getWindow().getGuiScaledHeight() - verticalMargin;
         for (CustomText text : bottomRightText) {
             int offset =
-                (client.textRenderer.getWidth(text.text) - 1) +
+                (client.font.width(text.text) - 1) +
                 (horizontalPadding * 2) +
                 horizontalMargin;
-            x = client.getWindow().getScaledWidth() - offset;
+            x = client.getWindow().getGuiScaledWidth() - offset;
 
-            y -= (client.textRenderer.fontHeight - 1) + (verticalPadding * 2);
+            y -= (client.font.lineHeight - 1) + (verticalPadding * 2);
 
-            drawString(drawContext, text, x, y);
+            drawString(graphics, text, x, y);
 
             y -= lineHeight;
         }
@@ -129,39 +129,39 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             float yPercent = text.customY / 100.0f;
 
             int maxX =
-                client.getWindow().getScaledWidth() -
+                client.getWindow().getGuiScaledWidth() -
                 (horizontalPadding * 2) -
-                (client.textRenderer.getWidth(text.text) - 1);
+                (client.font.width(text.text) - 1);
             int maxY =
-                client.getWindow().getScaledHeight() -
+                client.getWindow().getGuiScaledHeight() -
                 (verticalPadding * 2) -
-                (client.textRenderer.fontHeight - 1);
+                (client.font.lineHeight - 1);
 
             int scaledX = (int) (xPercent * maxX);
             int scaledY = (int) (yPercent * maxY);
 
-            drawString(drawContext, text, scaledX, scaledY);
+            drawString(graphics, text, scaledX, scaledY);
         }
     }
 
     private void drawString(
-        DrawContext drawContext,
+        GuiGraphicsExtractor graphics,
         CustomText text,
         int x,
         int y
     ) {
-        drawContext.fill(
+        graphics.fill(
             x,
             y,
             x +
-                (client.textRenderer.getWidth(text.text) - 1) +
+                (client.font.width(text.text) - 1) +
                 (horizontalPadding * 2),
-            y + (client.textRenderer.fontHeight - 1) + (verticalPadding * 2),
+            y + (client.font.lineHeight - 1) + (verticalPadding * 2),
             text.backgroundColor
         );
 
-        drawContext.drawText(
-            client.textRenderer,
+        graphics.drawString(
+            client.font,
             text.text,
             x + horizontalPadding,
             y + verticalPadding,
