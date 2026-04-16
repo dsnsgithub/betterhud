@@ -1,11 +1,11 @@
 package dsns.betterhud.util;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.MinecraftClient;
 
 public interface BaseMod {
     public String getModID();
 
     public ModSettings getModSettings();
 
-    public CustomText onStartTick(Minecraft client);
+    public CustomText onStartTick(MinecraftClient client);
 }

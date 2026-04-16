@@ -5,9 +5,10 @@ import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.Holder;
-import net.minecraft.world.entity.player.Player;
+import java.util.Optional;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.RegistryKey;
 
 public class Biome implements BaseMod {
 
@@ -24,17 +25,18 @@ public class Biome implements BaseMod {
     }
 
     @Override
-    public CustomText onStartTick(Minecraft client) {
-        Player player = client.player;
+    public CustomText onStartTick(MinecraftClient client) {
+        PlayerEntity player = client.player;
 
         if (player == null) return null;
 
         // have to specify this because name of class is Biome
-        Holder<net.minecraft.world.level.biome.Biome> biome = client.level.getBiome(player.blockPosition());
+        Optional<RegistryKey<net.minecraft.world.biome.Biome>> biome =
+            client.world.getBiome(player.getBlockPos()).getKey();
 
-        if (!biome.unwrapKey().isPresent()) return null;
+        if (!biome.isPresent()) return null;
 
-        String biomeString = formatSnakeCase(biome.getRegisteredName().replace("minecraft:", ""));
+        String biomeString = formatSnakeCase(biome.get().getValue().getPath());
 
         // used to maintain order when iterating
         LinkedHashMap<String, Integer> biomeColors = new LinkedHashMap<>();
