@@ -9,7 +9,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class BetterHUD implements ClientModInitializer {
         BetterHUDGUI betterHUDGUI = new BetterHUDGUI();
 
         HudElementRegistry.addLast(
-            Identifier.of("betterhud", "hud"),
+            ResourceLocation.fromNamespaceAndPath("betterhud", "hud"),
             betterHUDGUI::onHudRender
         );
         ClientTickEvents.START_CLIENT_TICK.register(betterHUDGUI);

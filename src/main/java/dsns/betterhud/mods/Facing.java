@@ -3,8 +3,8 @@ package dsns.betterhud.mods;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.player.Player;
 
 public class Facing implements BaseMod {
 
@@ -23,13 +23,13 @@ public class Facing implements BaseMod {
     }
 
     @Override
-    public CustomText onStartTick(MinecraftClient client) {
-        PlayerEntity player = client.player;
+    public CustomText onStartTick(Minecraft client) {
+        Player player = client.player;
 
-        if (player == null || player.getHorizontalFacing() == null) return null;
+        if (player == null || player.getDirection() == null) return null;
 
         return new CustomText(
-            formatSnakeCase(player.getHorizontalFacing().name()),
+            formatSnakeCase(player.getDirection().name()),
             getModSettings()
         );
     }
