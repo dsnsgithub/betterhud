@@ -6,9 +6,9 @@ import dsns.betterhud.util.ModSettings;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderTickCounter;
 
 public class BetterHUDGUI implements ClientTickEvents.StartTick {
 
@@ -20,7 +20,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
 
     public static int lineHeight = 1;
 
-    private final Minecraft client = Minecraft.getInstance();
+    private final MinecraftClient client = MinecraftClient.getInstance();
     private final List<CustomText> topLeftText = new ObjectArrayList<>();
     private final List<CustomText> topRightText = new ObjectArrayList<>();
     private final List<CustomText> bottomLeftList = new ObjectArrayList<>();
@@ -28,7 +28,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     private final List<CustomText> customPositionText = new ObjectArrayList<>();
 
     @Override
-    public void onStartTick(Minecraft client) {
+    public void onStartTick(MinecraftClient client) {
         this.topLeftText.clear();
         this.topRightText.clear();
         this.bottomLeftList.clear();
@@ -68,11 +68,11 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     }
 
     public void onHudRender(
-        GuiGraphicsExtractor drawContext,
-        DeltaTracker tickCounter
+        DrawContext drawContext,
+        RenderTickCounter tickCounter
     ) {
-        if (client.getDebugOverlay().showDebugScreen()) return;
-        if (client.options.hideGui) return;
+        if (client.getDebugHud().shouldShowDebugHud()) return;
+        if (client.options.hudHidden) return;
 
         int x = horizontalMargin;
         int y = verticalMargin;
@@ -81,15 +81,15 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             drawString(drawContext, text, x, y);
 
             y +=
-                (client.font.lineHeight - 1) +
+                (client.textRenderer.fontHeight - 1) +
                 (verticalPadding * 2) +
                 lineHeight;
         }
 
-        y = client.getWindow().getGuiScaledHeight() - verticalMargin;
+        y = client.getWindow().getScaledHeight() - verticalMargin;
 
         for (CustomText text : bottomLeftList) {
-            y -= (client.font.lineHeight - 1) + (verticalPadding * 2);
+            y -= (client.textRenderer.fontHeight - 1) + (verticalPadding * 2);
             drawString(drawContext, text, x, y);
             y -= lineHeight;
         }
@@ -97,27 +97,27 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         y = verticalMargin;
         for (CustomText text : topRightText) {
             int offset =
-                (client.font.width(text.text) - 1) +
+                (client.textRenderer.getWidth(text.text) - 1) +
                 (horizontalPadding * 2) +
                 horizontalMargin;
-            x = client.getWindow().getGuiScaledWidth() - offset;
+            x = client.getWindow().getScaledWidth() - offset;
             drawString(drawContext, text, x, y);
 
             y +=
-                (client.font.lineHeight - 1) +
+                (client.textRenderer.fontHeight - 1) +
                 (verticalPadding * 2) +
                 lineHeight;
         }
 
-        y = client.getWindow().getGuiScaledHeight() - verticalMargin;
+        y = client.getWindow().getScaledHeight() - verticalMargin;
         for (CustomText text : bottomRightText) {
             int offset =
-                (client.font.width(text.text) - 1) +
+                (client.textRenderer.getWidth(text.text) - 1) +
                 (horizontalPadding * 2) +
                 horizontalMargin;
-            x = client.getWindow().getGuiScaledWidth() - offset;
+            x = client.getWindow().getScaledWidth() - offset;
 
-            y -= (client.font.lineHeight - 1) + (verticalPadding * 2);
+            y -= (client.textRenderer.fontHeight - 1) + (verticalPadding * 2);
 
             drawString(drawContext, text, x, y);
 
@@ -129,13 +129,13 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             float yPercent = text.customY / 100.0f;
 
             int maxX =
-                client.getWindow().getGuiScaledWidth() -
+                client.getWindow().getScaledWidth() -
                 (horizontalPadding * 2) -
-                (client.font.width(text.text) - 1);
+                (client.textRenderer.getWidth(text.text) - 1);
             int maxY =
-                client.getWindow().getGuiScaledHeight() -
+                client.getWindow().getScaledHeight() -
                 (verticalPadding * 2) -
-                (client.font.lineHeight - 1);
+                (client.textRenderer.fontHeight - 1);
 
             int scaledX = (int) (xPercent * maxX);
             int scaledY = (int) (yPercent * maxY);
@@ -145,7 +145,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     }
 
     private void drawString(
-        GuiGraphicsExtractor drawContext,
+        DrawContext drawContext,
         CustomText text,
         int x,
         int y
@@ -154,14 +154,14 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             x,
             y,
             x +
-                (client.font.width(text.text) - 1) +
+                (client.textRenderer.getWidth(text.text) - 1) +
                 (horizontalPadding * 2),
-            y + (client.font.lineHeight - 1) + (verticalPadding * 2),
+            y + (client.textRenderer.fontHeight - 1) + (verticalPadding * 2),
             text.backgroundColor
         );
 
-        drawContext.text(
-            client.font,
+        drawContext.drawText(
+            client.textRenderer,
             text.text,
             x + horizontalPadding,
             y + verticalPadding,
