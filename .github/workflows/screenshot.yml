@@ -35,14 +35,20 @@ jobs:
       - name: install display tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y xvfb scrot fluxbox x11-utils
+          sudo apt-get install -y \
+            xvfb scrot fluxbox x11-utils xdotool \
+            libgl1-mesa-dri libgles2-mesa mesa-vulkan-drivers \
+            libegl1-mesa libopengl0
 
       - name: start virtual display
         run: |
-          Xvfb :99 -screen 0 1920x1080x24 &
+          Xvfb :99 -screen 0 1920x1080x24 +extension GLX +render -ac &
           DISPLAY=:99 fluxbox &>/dev/null &
           sleep 2
           echo "DISPLAY=:99" >> $GITHUB_ENV
+          # Force Mesa software renderer — no GPU available in CI
+          echo "LIBGL_ALWAYS_SOFTWARE=1" >> $GITHUB_ENV
+          echo "GALLIUM_DRIVER=llvmpipe" >> $GITHUB_ENV
 
       - name: prepare run directory
         run: |
@@ -117,13 +123,28 @@ jobs:
           echo "CLIENT_PID=$CLIENT_PID" >> "$GITHUB_ENV"
 
           # Verify it didn't crash immediately
-          sleep 5
+          sleep 8
           if ! kill -0 "$CLIENT_PID" 2>/dev/null; then
             echo "ERROR: Minecraft crashed on launch"
-            tail -50 /tmp/client.log
+            tail -80 /tmp/client.log
+            exit 1
+          fi
+
+          # Wait up to 3 minutes for a Minecraft window to actually appear
+          echo "Waiting for Minecraft window..."
+          TIMEOUT=180
+          ELAPSED=0
+          until xdotool search --name "Minecraft" 2>/dev/null | grep -q . || [ "$ELAPSED" -ge "$TIMEOUT" ]; do
+            sleep 3
+            ELAPSED=$((ELAPSED + 3))
+          done
+
+          if xdotool search --name "Minecraft" 2>/dev/null | grep -q .; then
+            echo "Minecraft window appeared after ${ELAPSED}s — waiting 30s for world to finish loading"
+            sleep 30
           else
-            echo "Client running (PID $CLIENT_PID), waiting 120s for world to load..."
-            sleep 120
+            echo "WARNING: No Minecraft window detected after ${TIMEOUT}s — taking screenshot anyway"
+            tail -30 /tmp/client.log
           fi
 
       - name: take screenshot
