@@ -4,10 +4,26 @@ pluginManagement {
 			name = 'Fabric'
 			url = 'https://maven.fabricmc.net/'
 		}
+		maven {
+			name = 'Stonecutter'
+			url = 'https://maven.kikugie.dev/releases'
+		}
 		mavenCentral()
 		gradlePluginPortal()
 	}
 }
 
-// Should match your modid
+plugins {
+	id 'dev.kikugie.stonecutter' version '0.5.1'
+}
+
+stonecutter {
+	create(rootProject) {
+		vers("1.21", "1.21")
+		vers("1.21.9", "1.21.9")
+		vers("26.1", "26.1")
+		active "26.1"
+	}
+}
+
 rootProject.name = 'betterhud'

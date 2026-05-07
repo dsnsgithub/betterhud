@@ -8,8 +8,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+//? if mc >= "26.1" {
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
+//?} else {
+/*import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;*/
+//?}
 
 class CoordinatesSettings extends ModSettings {
 
@@ -55,8 +60,13 @@ public class Coordinates implements BaseMod {
     }
 
     @Override
+    //? if mc >= "26.1" {
     public CustomText onStartTick(Minecraft client) {
         Player player = client.player;
+    //?} else {
+    /*public CustomText onStartTick(MinecraftClient client) {
+        PlayerEntity player = client.player;*/
+    //?}
 
         if (player == null) return null;
 

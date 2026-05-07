@@ -5,9 +5,16 @@ import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
 import java.util.LinkedHashMap;
 import java.util.Map;
+//? if mc >= "26.1" {
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.world.entity.player.Player;
+//?} else {
+/*import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.RegistryKey;
+import java.util.Optional;*/
+//?}
 
 public class Biome implements BaseMod {
 
@@ -24,6 +31,7 @@ public class Biome implements BaseMod {
     }
 
     @Override
+    //? if mc >= "26.1" {
     public CustomText onStartTick(Minecraft client) {
         Player player = client.player;
 
@@ -35,6 +43,20 @@ public class Biome implements BaseMod {
         if (!biome.unwrapKey().isPresent()) return null;
 
         String biomeString = formatSnakeCase(biome.getRegisteredName().replace("minecraft:", ""));
+    //?} else {
+    /*public CustomText onStartTick(MinecraftClient client) {
+        PlayerEntity player = client.player;
+
+        if (player == null) return null;
+
+        // have to specify this because name of class is Biome
+        Optional<RegistryKey<net.minecraft.world.biome.Biome>> biome =
+            client.world.getBiome(player.getBlockPos()).getKey();
+
+        if (!biome.isPresent()) return null;
+
+        String biomeString = formatSnakeCase(biome.get().getValue().getPath());*/
+    //?}
 
         // used to maintain order when iterating
         LinkedHashMap<String, Integer> biomeColors = new LinkedHashMap<>();
@@ -70,7 +92,7 @@ public class Biome implements BaseMod {
         biomeColors.put("Beach", 0xffffd700);
         biomeColors.put("Hills", 0xff2e8b57);
 
-        int color = 0xffffffff; // default color
+        int color = 0xffffffff;
 
         for (Map.Entry<String, Integer> entry : biomeColors.entrySet()) {
             if (biomeString.contains(entry.getKey())) {
@@ -83,17 +105,12 @@ public class Biome implements BaseMod {
     }
 
     public String formatSnakeCase(String biomeName) {
-        // Split the string by underscores
         String[] words = biomeName.split("_");
-
-        // Capitalize each word
         for (int i = 0; i < words.length; i++) {
             words[i] =
                 words[i].substring(0, 1).toUpperCase() +
                 words[i].substring(1).toLowerCase();
         }
-
-        // Join the words with spaces
         return String.join(" ", words);
     }
 }
