@@ -10,7 +10,7 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.chat.Component;
+import net.minecraft.text.Text;
 
 public class ModMenu implements ModMenuApi {
 
@@ -22,7 +22,7 @@ public class ModMenu implements ModMenuApi {
         return parent -> {
             ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(parent)
-                .setTitle(Component.literal("BetterHUD Settings"));
+                .setTitle(Text.literal("BetterHUD Settings"));
 
             // same as builder.setSavingRunnable(() -> Config.serialize());
             builder.setSavingRunnable(Config::serialize);
@@ -31,7 +31,7 @@ public class ModMenu implements ModMenuApi {
 
             for (BaseMod mod : BetterHUD.mods) {
                 ConfigCategory category = builder.getOrCreateCategory(
-                    Component.literal(mod.getModID())
+                    Text.literal(mod.getModID())
                 );
 
                 for (Map.Entry<String, Setting> entry : mod
@@ -45,7 +45,7 @@ public class ModMenu implements ModMenuApi {
                         category.addEntry(
                             entryBuilder
                                 .startBooleanToggle(
-                                    Component.literal(key),
+                                    Text.literal(key),
                                     setting.getBooleanValue()
                                 )
                                 .setDefaultValue(
@@ -60,7 +60,7 @@ public class ModMenu implements ModMenuApi {
                         category.addEntry(
                             entryBuilder
                                 .startStringDropdownMenu(
-                                    Component.literal(key),
+                                    Text.literal(key),
                                     setting.getStringValue()
                                 )
                                 .setSelections(
@@ -76,7 +76,7 @@ public class ModMenu implements ModMenuApi {
                         category.addEntry(
                             entryBuilder
                                 .startIntField(
-                                    Component.literal(key),
+                                    Text.literal(key),
                                     setting.getIntValue()
                                 )
                                 .setDefaultValue(
@@ -91,7 +91,7 @@ public class ModMenu implements ModMenuApi {
                         category.addEntry(
                             entryBuilder
                                 .startDoubleField(
-                                    Component.literal(key),
+                                    Text.literal(key),
                                     setting.getDoubleValue()
                                 )
                                 .setDefaultValue(
@@ -108,7 +108,7 @@ public class ModMenu implements ModMenuApi {
                         category.addEntry(
                             entryBuilder
                                 .startAlphaColorField(
-                                    Component.literal(key),
+                                    Text.literal(key),
                                     setting.getColorValue()
                                 )
                                 .setDefaultValue(

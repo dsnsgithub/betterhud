@@ -1,10 +1,14 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
 version = project.mod_version
 group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
 
 repositories {
 	// Add repositories to retrieve artifacts from in here.
@@ -13,30 +17,25 @@ repositories {
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
 
-    maven { url "https://maven.shedaniel.me/" }
+	maven { url "https://maven.shedaniel.me/" }
     maven { url "https://maven.terraformersmc.com/releases/" }
-}
-
-configurations.configureEach {
-	if (name.toLowerCase().contains('annotationprocessor')) {
-		exclude group: 'org.ow2.asm'
-	}
 }
 
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	implementation include(fabricApi.module("fabric-api-base", project.fabric_api_version))
-	implementation include(fabricApi.module("fabric-rendering-v1", project.fabric_api_version))
+	modImplementation include(fabricApi.module("fabric-api-base", project.fabric_version))
+	modImplementation include(fabricApi.module("fabric-rendering-v1", project.fabric_version))
 	
-	implementation include("com.terraformersmc:modmenu:${project.modmenu_version}")
-	implementation include("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+	modImplementation include("com.terraformersmc:modmenu:${project.modmenu_version}")
+	modImplementation include("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
+	
 }
 
 processResources {
@@ -48,7 +47,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
+	it.options.release = 21
 }
 
 java {
@@ -57,15 +56,15 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
-	inputs.property "projectName", project.name
+	inputs.property "archivesName", project.base.archivesName
 
 	from("LICENSE") {
-		rename { "${it}_${project.name}"}
+		rename { "${it}_${inputs.properties.archivesName}"}
 	}
 }
 
@@ -73,6 +72,7 @@ jar {
 publishing {
 	publications {
 		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
 			from components.java
 		}
 	}
