@@ -1,5 +1,6 @@
 package dsns.betterhud;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
@@ -79,48 +80,31 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
 
         for (CustomText text : topLeftText) {
             drawString(drawContext, text, x, y);
-
-            y +=
-                (client.font.lineHeight - 1) +
-                (verticalPadding * 2) +
-                lineHeight;
+            y += scaledElementHeight(text) + lineHeight;
         }
 
         y = client.getWindow().getGuiScaledHeight() - verticalMargin;
 
         for (CustomText text : bottomLeftList) {
-            y -= (client.font.lineHeight - 1) + (verticalPadding * 2);
+            y -= scaledElementHeight(text);
             drawString(drawContext, text, x, y);
             y -= lineHeight;
         }
 
         y = verticalMargin;
         for (CustomText text : topRightText) {
-            int offset =
-                (client.font.width(text.text) - 1) +
-                (horizontalPadding * 2) +
-                horizontalMargin;
+            int offset = scaledElementWidth(text) + horizontalMargin;
             x = client.getWindow().getGuiScaledWidth() - offset;
             drawString(drawContext, text, x, y);
-
-            y +=
-                (client.font.lineHeight - 1) +
-                (verticalPadding * 2) +
-                lineHeight;
+            y += scaledElementHeight(text) + lineHeight;
         }
 
         y = client.getWindow().getGuiScaledHeight() - verticalMargin;
         for (CustomText text : bottomRightText) {
-            int offset =
-                (client.font.width(text.text) - 1) +
-                (horizontalPadding * 2) +
-                horizontalMargin;
+            int offset = scaledElementWidth(text) + horizontalMargin;
             x = client.getWindow().getGuiScaledWidth() - offset;
-
-            y -= (client.font.lineHeight - 1) + (verticalPadding * 2);
-
+            y -= scaledElementHeight(text);
             drawString(drawContext, text, x, y);
-
             y -= lineHeight;
         }
 
@@ -130,17 +114,15 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
 
             int maxX =
                 client.getWindow().getGuiScaledWidth() -
-                (horizontalPadding * 2) -
-                (client.font.width(text.text) - 1);
+                scaledElementWidth(text);
             int maxY =
                 client.getWindow().getGuiScaledHeight() -
-                (verticalPadding * 2) -
-                (client.font.lineHeight - 1);
+                scaledElementHeight(text);
 
-            int scaledX = (int) (xPercent * maxX);
-            int scaledY = (int) (yPercent * maxY);
+            int posX = (int) (xPercent * maxX);
+            int posY = (int) (yPercent * maxY);
 
-            drawString(drawContext, text, scaledX, scaledY);
+            drawString(drawContext, text, posX, posY);
         }
     }
 
@@ -150,23 +132,34 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         int x,
         int y
     ) {
-        drawContext.fill(
-            x,
-            y,
-            x +
-                (client.font.width(text.text) - 1) +
-                (horizontalPadding * 2),
-            y + (client.font.lineHeight - 1) + (verticalPadding * 2),
-            text.backgroundColor
-        );
+        PoseStack poses = drawContext.pose();
+        poses.pushPose();
+        poses.translate(x, y, 0);
+        poses.scale(text.scale, text.scale, 1.0f);
 
+        int w = (client.font.width(text.text) - 1) + (horizontalPadding * 2);
+        int h = (client.font.lineHeight - 1) + (verticalPadding * 2);
+
+        drawContext.fill(0, 0, w, h, text.backgroundColor);
         drawContext.text(
             client.font,
             text.text,
-            x + horizontalPadding,
-            y + verticalPadding,
+            horizontalPadding,
+            verticalPadding,
             text.color,
             true
         );
+
+        poses.popPose();
+    }
+
+    private int scaledElementWidth(CustomText text) {
+        int w = (client.font.width(text.text) - 1) + (horizontalPadding * 2);
+        return (int) (w * text.scale);
+    }
+
+    private int scaledElementHeight(CustomText text) {
+        int h = (client.font.lineHeight - 1) + (verticalPadding * 2);
+        return (int) (h * text.scale);
     }
 }
