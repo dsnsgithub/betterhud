@@ -88,6 +88,12 @@ public class ModMenu implements ModMenuApi {
                                 .build()
                         );
                     } else if (setting.getType().equals("double")) {
+                        double min = Double.parseDouble(
+                            setting.getPossibleValues()[0]
+                        );
+                        double max = Double.parseDouble(
+                            setting.getPossibleValues()[1]
+                        );
                         category.addEntry(
                             entryBuilder
                                 .startDoubleField(
@@ -99,6 +105,8 @@ public class ModMenu implements ModMenuApi {
                                         setting.getDefaultValue()
                                     )
                                 )
+                                .setMin(min)
+                                .setMax(max)
                                 .setSaveConsumer(value ->
                                     setting.setValue(String.valueOf(value))
                                 )
