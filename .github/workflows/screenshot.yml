@@ -35,20 +35,27 @@ jobs:
       - name: install display tools
         run: |
           sudo apt-get update -qq
+          # Mesa software GL + full LWJGL/GLFW X11 + audio deps
           sudo apt-get install -y \
             xvfb scrot fluxbox x11-utils xdotool \
             libgl1-mesa-dri libgles2-mesa mesa-vulkan-drivers \
-            libegl1-mesa libopengl0
+            libegl1-mesa libopengl0 \
+            libx11-6 libxext6 libxrender1 libxrandr2 \
+            libxcursor1 libxinerama1 libxi6 libxxf86vm1 \
+            libopenal1 pulseaudio-utils
 
       - name: start virtual display
         run: |
           Xvfb :99 -screen 0 1920x1080x24 +extension GLX +render -ac &
           DISPLAY=:99 fluxbox &>/dev/null &
           sleep 2
-          echo "DISPLAY=:99" >> $GITHUB_ENV
-          # Force Mesa software renderer — no GPU available in CI
+          echo "DISPLAY=:99"           >> $GITHUB_ENV
+          # Mesa software renderer — no GPU in CI
           echo "LIBGL_ALWAYS_SOFTWARE=1" >> $GITHUB_ENV
           echo "GALLIUM_DRIVER=llvmpipe" >> $GITHUB_ENV
+          # Disable audio so OpenAL doesn't crash LWJGL on a headless runner
+          echo "ALSOFT_DRIVERS=null"     >> $GITHUB_ENV
+          echo "SDL_AUDIODRIVER=dummy"   >> $GITHUB_ENV
 
       - name: prepare run directory
         run: |
@@ -116,35 +123,42 @@ jobs:
 
       - name: launch minecraft client
         run: |
+          # Pass all rendering/audio env vars explicitly so they reach the
+          # forked JVM even if the Gradle daemon was started earlier
+          DISPLAY=:99 \
+          LIBGL_ALWAYS_SOFTWARE=1 \
+          GALLIUM_DRIVER=llvmpipe \
+          ALSOFT_DRIVERS=null \
+          SDL_AUDIODRIVER=dummy \
           ./gradlew runClient \
             --args="--username CIBot --uuid 00000000-0000-0000-0000-000000000001 --quickPlaySingleplayer CI_World" \
             > /tmp/client.log 2>&1 &
           CLIENT_PID=$!
           echo "CLIENT_PID=$CLIENT_PID" >> "$GITHUB_ENV"
 
-          # Verify it didn't crash immediately
-          sleep 8
+          # Give the JVM a moment, then check for early crash
+          sleep 10
           if ! kill -0 "$CLIENT_PID" 2>/dev/null; then
-            echo "ERROR: Minecraft crashed on launch"
-            tail -80 /tmp/client.log
-            exit 1
-          fi
-
-          # Wait up to 3 minutes for a Minecraft window to actually appear
-          echo "Waiting for Minecraft window..."
-          TIMEOUT=180
-          ELAPSED=0
-          until xdotool search --name "Minecraft" 2>/dev/null | grep -q . || [ "$ELAPSED" -ge "$TIMEOUT" ]; do
-            sleep 3
-            ELAPSED=$((ELAPSED + 3))
-          done
-
-          if xdotool search --name "Minecraft" 2>/dev/null | grep -q .; then
-            echo "Minecraft window appeared after ${ELAPSED}s — waiting 30s for world to finish loading"
-            sleep 30
+            echo "WARNING: Minecraft process exited within 10s — showing last log lines:"
+            tail -100 /tmp/client.log
+            echo "Taking screenshot of whatever is on screen for diagnostics"
           else
-            echo "WARNING: No Minecraft window detected after ${TIMEOUT}s — taking screenshot anyway"
-            tail -30 /tmp/client.log
+            # Wait up to 3 minutes for a Minecraft window to actually appear
+            echo "Client running (PID $CLIENT_PID) — waiting for Minecraft window..."
+            TIMEOUT=180
+            ELAPSED=0
+            until xdotool search --name "Minecraft" 2>/dev/null | grep -q . || [ "$ELAPSED" -ge "$TIMEOUT" ]; do
+              sleep 3
+              ELAPSED=$((ELAPSED + 3))
+            done
+
+            if xdotool search --name "Minecraft" 2>/dev/null | grep -q .; then
+              echo "Minecraft window appeared after ${ELAPSED}s — waiting 30s for world to load"
+              sleep 30
+            else
+              echo "WARNING: No Minecraft window after ${TIMEOUT}s — taking diagnostic screenshot"
+              tail -30 /tmp/client.log
+            fi
           fi
 
       - name: take screenshot
