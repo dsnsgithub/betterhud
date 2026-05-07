@@ -4,7 +4,7 @@ plugins {
 	id 'maven-publish'
 }
 
-def mc = stonecutter.current.version
+def mc = project.minecraft_version
 def isOldMC = mc.startsWith("1.")  // 1.21.x → Yarn mappings, Java 21
 def is121 = mc == "1.21"           // Only 1.21 needs lifecycle-events as explicit module
 
@@ -105,9 +105,6 @@ jar {
 		rename { "${it}_${project.name}" }
 	}
 }
-
-// Registers a root-level task that builds all versions sequentially
-stonecutter.chiseled tasks.register("chiseledBuild", stonecutter.task(tasks.named("build")))
 
 publishing {
 	publications {

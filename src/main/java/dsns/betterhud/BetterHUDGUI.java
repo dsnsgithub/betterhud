@@ -17,10 +17,11 @@ import net.minecraft.client.render.RenderTickCounter;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;*/
 //?}
 
-public class BetterHUDGUI
-    //? if mc >= "26.1"
-    implements ClientTickEvents.StartTick {
-    //?> /*implements HudRenderCallback, ClientTickEvents.StartTick {*/
+//? if mc >= "26.1" {
+public class BetterHUDGUI implements ClientTickEvents.StartTick {
+//?} else {
+/*public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTick {*/
+//?}
 
     public static int verticalPadding = 4;
     public static int horizontalPadding = 4;
