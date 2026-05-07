@@ -1,6 +1,5 @@
 package dsns.betterhud;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
@@ -132,10 +131,10 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         int x,
         int y
     ) {
-        PoseStack poses = drawContext.pose();
-        poses.pushPose();
-        poses.translate(x, y, 0);
-        poses.scale(text.scale, text.scale, 1.0f);
+        var poses = drawContext.pose();
+        poses.pushMatrix();
+        poses.translate((float) x, (float) y);
+        poses.scale(text.scale, text.scale);
 
         int w = (client.font.width(text.text) - 1) + (horizontalPadding * 2);
         int h = (client.font.lineHeight - 1) + (verticalPadding * 2);
@@ -150,7 +149,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             true
         );
 
-        poses.popPose();
+        poses.popMatrix();
     }
 
     private int scaledElementWidth(CustomText text) {
