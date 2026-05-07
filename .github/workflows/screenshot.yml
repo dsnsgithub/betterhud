@@ -1,0 +1,276 @@
+name: screenshot test
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: setup jdk
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: build mod
+        run: ./gradlew build
+
+      - name: install display tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb scrot fluxbox x11-utils
+
+      - name: start virtual display
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 &
+          DISPLAY=:99 fluxbox &>/dev/null &
+          sleep 2
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+
+      - name: prepare run directory
+        run: |
+          mkdir -p run/saves
+
+          # Accept EULA so the server can generate a world
+          echo "eula=true" > run/eula.txt
+
+          # Fast flat world, offline mode
+          cat > run/server.properties << 'EOF'
+          level-name=world
+          gamemode=creative
+          generate-structures=false
+          level-type=flat
+          spawn-protection=0
+          view-distance=4
+          simulation-distance=4
+          online-mode=false
+          max-tick-time=60000
+          EOF
+
+          # Low-quality client settings so Minecraft loads faster in CI
+          cat > run/options.txt << 'EOF'
+          autoJump:false
+          renderDistance:4
+          simulationDistance:4
+          graphicsMode:0
+          ao:false
+          bobView:false
+          guiScale:2
+          fullscreen:false
+          EOF
+
+      - name: generate world via server
+        run: |
+          ./gradlew runServer --args="--nogui" > /tmp/server.log 2>&1 &
+          SERVER_PID=$!
+
+          echo "Waiting for server to finish world generation..."
+          TIMEOUT=180
+          ELAPSED=0
+          until grep -q "Done" /tmp/server.log 2>/dev/null || [ "$ELAPSED" -ge "$TIMEOUT" ]; do
+            sleep 3
+            ELAPSED=$((ELAPSED + 3))
+          done
+
+          if grep -q "Done" /tmp/server.log 2>/dev/null; then
+            echo "World generated after ${ELAPSED}s"
+          else
+            echo "Server timed out — continuing anyway"
+            tail -30 /tmp/server.log
+          fi
+
+          kill "$SERVER_PID" 2>/dev/null
+          wait "$SERVER_PID" 2>/dev/null || true
+
+          # Copy server world to client saves
+          if [ -d "run/world" ]; then
+            cp -r run/world "run/saves/CI_World"
+            echo "Copied run/world -> run/saves/CI_World"
+          else
+            echo "WARNING: server world not found, client will show main menu"
+            ls run/ || true
+          fi
+
+      - name: launch minecraft client
+        run: |
+          ./gradlew runClient \
+            --args="--username CIBot --uuid 00000000-0000-0000-0000-000000000001 --quickPlaySingleplayer CI_World" \
+            > /tmp/client.log 2>&1 &
+          CLIENT_PID=$!
+          echo "CLIENT_PID=$CLIENT_PID" >> "$GITHUB_ENV"
+
+          # Verify it didn't crash immediately
+          sleep 5
+          if ! kill -0 "$CLIENT_PID" 2>/dev/null; then
+            echo "ERROR: Minecraft crashed on launch"
+            tail -50 /tmp/client.log
+          else
+            echo "Client running (PID $CLIENT_PID), waiting 120s for world to load..."
+            sleep 120
+          fi
+
+      - name: take screenshot
+        if: always()
+        run: |
+          DISPLAY=:99 scrot /tmp/mc-screenshot.png
+          echo "Screenshot captured"
+          ls -lh /tmp/mc-screenshot.png
+
+      - name: stop minecraft
+        if: always()
+        run: |
+          [ -n "$CLIENT_PID" ] && kill "$CLIENT_PID" 2>/dev/null || true
+          pkill -f 'net.minecraft' 2>/dev/null || true
+
+      - name: upload screenshot artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: minecraft-screenshot
+          path: /tmp/mc-screenshot.png
+          if-no-files-found: warn
+
+      - name: upload logs artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: minecraft-logs
+          path: |
+            /tmp/server.log
+            /tmp/client.log
+            run/logs/
+          if-no-files-found: ignore
+
+      - name: publish screenshot to screenshots branch
+        if: always()
+        run: |
+          if [ ! -f /tmp/mc-screenshot.png ]; then
+            echo "No screenshot file found, skipping upload"
+            exit 0
+          fi
+
+          FILENAME="screenshots/${{ github.sha }}.png"
+          COMMIT_MSG="Screenshot for ${{ github.sha }}"
+
+          # Create the screenshots branch if it doesn't exist
+          BRANCH_EXISTS=$(curl -sf \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/branches/screenshots" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('name',''))" 2>/dev/null || echo "")
+
+          if [ -z "$BRANCH_EXISTS" ]; then
+            echo "Creating screenshots branch..."
+            HEAD_SHA=$(git rev-parse HEAD)
+            curl -sf -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              "https://api.github.com/repos/${{ github.repository }}/git/refs" \
+              -d "{\"ref\":\"refs/heads/screenshots\",\"sha\":\"${HEAD_SHA}\"}" > /dev/null \
+              && echo "Branch created" || echo "Branch creation failed (may already exist)"
+          fi
+
+          # Get current file SHA if it already exists (required for updates)
+          EXISTING_SHA=$(curl -sf \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/${FILENAME}?ref=screenshots" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('sha',''))" 2>/dev/null || echo "")
+
+          # Build JSON body using Python to safely handle large base64 content
+          python3 - << PYEOF
+          import json, base64
+
+          with open("/tmp/mc-screenshot.png", "rb") as f:
+              content = base64.b64encode(f.read()).decode()
+
+          body = {
+              "message": "$COMMIT_MSG",
+              "content": content,
+              "branch": "screenshots",
+          }
+
+          existing_sha = "$EXISTING_SHA"
+          if existing_sha:
+              body["sha"] = existing_sha
+
+          with open("/tmp/upload-body.json", "w") as f:
+              json.dump(body, f)
+
+          print(f"Upload body written ({len(content)} chars of base64)")
+          PYEOF
+
+          # Upload to GitHub Contents API
+          HTTP_STATUS=$(curl -sf -o /tmp/upload-response.json -w "%{http_code}" \
+            -X PUT \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d @/tmp/upload-body.json \
+            "https://api.github.com/repos/${{ github.repository }}/contents/${FILENAME}" \
+            || echo "000")
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "Screenshot uploaded (HTTP $HTTP_STATUS)"
+          else
+            echo "Upload failed (HTTP $HTTP_STATUS)"
+            cat /tmp/upload-response.json || true
+          fi
+
+      - name: post screenshot comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = context.sha;
+            const repo = `${context.repo.owner}/${context.repo.repo}`;
+            const runId = context.runId;
+
+            const screenshotUrl =
+              `https://raw.githubusercontent.com/${repo}/screenshots/screenshots/${sha}.png`;
+            const runUrl =
+              `https://github.com/${repo}/actions/runs/${runId}`;
+
+            const body = [
+              '## Minecraft Screenshot',
+              '',
+              `![BetterHUD in Minecraft](${screenshotUrl})`,
+              '',
+              `> Commit \`${sha.slice(0, 7)}\` — [View CI Run & Artifacts](${runUrl})`,
+            ].join('\n');
+
+            try {
+              if (context.eventName === 'pull_request') {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  body,
+                });
+                console.log('Posted comment on PR #' + context.payload.pull_request.number);
+              } else {
+                await github.rest.repos.createCommitComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: sha,
+                  body,
+                });
+                console.log('Posted comment on commit ' + sha.slice(0, 7));
+              }
+            } catch (err) {
+              core.warning('Failed to post comment: ' + err.message);
+            }
