@@ -109,7 +109,7 @@ jobs:
             tail -30 /tmp/server.log
           fi
 
-          kill "$SERVER_PID" 2>/dev/null
+          kill "$SERVER_PID" 2>/dev/null || true
           wait "$SERVER_PID" 2>/dev/null || true
 
           # Copy server world to client saves
@@ -122,6 +122,7 @@ jobs:
           fi
 
       - name: launch minecraft client
+        if: always()
         run: |
           # Pass all rendering/audio env vars explicitly so they reach the
           # forked JVM even if the Gradle daemon was started earlier
