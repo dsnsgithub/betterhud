@@ -5,6 +5,7 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - mc: "1.21"
@@ -26,7 +27,7 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build mc${{ matrix.mc }}
-        run: ./gradlew :${{ matrix.mc }}:build
+        run: ./gradlew :${{ matrix.mc }}:build --stacktrace
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
         with:
