@@ -22,7 +22,7 @@ stonecutter {
 		vers("1.21", "1.21")
 		vers("1.21.9", "1.21.9")
 		vers("26.1", "26.1")
-		active "26.1"
+		vcsVersion = "26.1"
 	}
 }
 
