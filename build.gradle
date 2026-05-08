@@ -1,6 +1,5 @@
 plugins {
 	id 'net.fabricmc.fabric-loom' version "${loom_version}"
-	id 'dev.kikugie.stonecutter'
 	id 'maven-publish'
 }
 
@@ -8,7 +7,7 @@ def mc = project.minecraft_version
 def isOldMC = mc.startsWith("1.")  // 1.21.x → Yarn mappings, Java 21
 def is121 = mc == "1.21"           // Only 1.21 needs lifecycle-events as explicit module
 
-stonecutter.const "mc", mc
+stonecutter.dependency "mc", mc
 
 version = "${project.mod_version}+mc${project.minecraft_version}"
 group = project.maven_group
