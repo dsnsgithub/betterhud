@@ -38,7 +38,7 @@ jobs:
           sudo apt-get update -qq
           # Mesa software GL + full LWJGL/GLFW X11 + audio deps
           sudo apt-get install -y \
-            xvfb scrot fluxbox x11-utils xdotool \
+            xvfb scrot fluxbox x11-utils xdotool imagemagick \
             libgl1-mesa-dri libgles2-mesa mesa-vulkan-drivers \
             libegl1-mesa libopengl0 \
             libx11-6 libxext6 libxrender1 libxrandr2 \
@@ -168,9 +168,19 @@ jobs:
       - name: take screenshot
         if: always()
         run: |
-          # scrot exits non-zero if X has any issue — don't let that fail the job
-          DISPLAY=:99 scrot /tmp/mc-screenshot.png 2>&1 \
-            || { echo "WARNING: scrot failed (exit $?), display may not be ready"; }
+          # Verify the display is actually reachable before attempting capture
+          if ! DISPLAY=:99 xdpyinfo > /dev/null 2>&1; then
+            echo "ERROR: Display :99 is not available — no screenshot possible"
+            exit 0
+          fi
+          echo "Display :99 is up"
+
+          # ImageMagick import is more reliable than scrot on headless X11;
+          # fall back to scrot if import fails for any reason
+          DISPLAY=:99 import -window root /tmp/mc-screenshot.png 2>&1 \
+            || DISPLAY=:99 scrot /tmp/mc-screenshot.png 2>&1 \
+            || echo "WARNING: all screenshot methods failed"
+
           ls -lh /tmp/mc-screenshot.png 2>/dev/null || echo "No screenshot file produced"
 
       - name: stop minecraft
