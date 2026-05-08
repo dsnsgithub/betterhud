@@ -6,11 +6,22 @@ import dsns.betterhud.util.ModSettings;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+//? if mc < "1.21.6" {
+/*import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;*/
+//?}
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+//? if mc >= "26" {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+//?} else {
+/*import net.minecraft.client.gui.GuiGraphics;*/
+//?}
 
+//? if mc >= "1.21.6" {
 public class BetterHUDGUI implements ClientTickEvents.StartTick {
+//?} else {
+/*public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTick {*/
+//?}
 
     public static int verticalPadding = 4;
     public static int horizontalPadding = 4;
@@ -68,7 +79,11 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     }
 
     public void onHudRender(
+        //? if mc >= "26" {
         GuiGraphicsExtractor drawContext,
+        //?} else {
+        /*GuiGraphics drawContext,*/
+        //?}
         DeltaTracker tickCounter
     ) {
         if (client.getDebugOverlay().showDebugScreen()) return;
@@ -145,7 +160,11 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     }
 
     private void drawString(
+        //? if mc >= "26" {
         GuiGraphicsExtractor drawContext,
+        //?} else {
+        /*GuiGraphics drawContext,*/
+        //?}
         CustomText text,
         int x,
         int y
@@ -160,6 +179,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             text.backgroundColor
         );
 
+        //? if mc >= "26" {
         drawContext.text(
             client.font,
             text.text,
@@ -168,5 +188,15 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             text.color,
             true
         );
+        //?} else {
+        /*drawContext.drawString(
+            client.font,
+            text.text,
+            x + horizontalPadding,
+            y + verticalPadding,
+            text.color,
+            true
+        );*/
+        //?}
     }
 }
