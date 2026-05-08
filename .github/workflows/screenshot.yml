@@ -235,17 +235,17 @@ jobs:
           # Write Python helper with single-quoted heredoc (no shell substitution),
           # then pass variables as argv so there are no quoting/expansion issues.
           cat > /tmp/make_body.py << 'PYEOF'
-import json, base64, sys
-img_path, commit_msg, existing_sha = sys.argv[1], sys.argv[2], sys.argv[3]
-with open(img_path, "rb") as f:
-    content = base64.b64encode(f.read()).decode()
-body = {"message": commit_msg, "content": content, "branch": "screenshots"}
-if existing_sha:
-    body["sha"] = existing_sha
-with open("/tmp/upload-body.json", "w") as f:
-    json.dump(body, f)
-print(f"Upload body: {len(content)} base64 chars")
-PYEOF
+          import json, base64, sys
+          img_path, commit_msg, existing_sha = sys.argv[1], sys.argv[2], sys.argv[3]
+          with open(img_path, "rb") as f:
+              content = base64.b64encode(f.read()).decode()
+          body = {"message": commit_msg, "content": content, "branch": "screenshots"}
+          if existing_sha:
+              body["sha"] = existing_sha
+          with open("/tmp/upload-body.json", "w") as f:
+              json.dump(body, f)
+          print(f"Upload body: {len(content)} base64 chars")
+          PYEOF
           python3 /tmp/make_body.py "/tmp/mc-screenshot.png" "$COMMIT_MSG" "$EXISTING_SHA" \
             || { echo "WARNING: failed to build upload body"; exit 0; }
 
