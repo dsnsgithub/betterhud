@@ -8,6 +8,7 @@ on:
 jobs:
   screenshot:
     runs-on: ubuntu-24.04
+    continue-on-error: true  # screenshots are informational, never block a PR
     permissions:
       contents: write
       pull-requests: write
@@ -90,7 +91,9 @@ jobs:
           EOF
 
       - name: generate world via server
+        continue-on-error: true
         run: |
+          set +e  # process management shouldn't abort the step
           ./gradlew runServer --args="--nogui" > /tmp/server.log 2>&1 &
           SERVER_PID=$!
 
@@ -165,9 +168,10 @@ jobs:
       - name: take screenshot
         if: always()
         run: |
-          DISPLAY=:99 scrot /tmp/mc-screenshot.png
-          echo "Screenshot captured"
-          ls -lh /tmp/mc-screenshot.png
+          # scrot exits non-zero if X has any issue — don't let that fail the job
+          DISPLAY=:99 scrot /tmp/mc-screenshot.png 2>&1 \
+            || { echo "WARNING: scrot failed (exit $?), display may not be ready"; }
+          ls -lh /tmp/mc-screenshot.png 2>/dev/null || echo "No screenshot file produced"
 
       - name: stop minecraft
         if: always()
@@ -228,28 +232,22 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/contents/${FILENAME}?ref=screenshots" \
             | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('sha',''))" 2>/dev/null || echo "")
 
-          # Build JSON body using Python to safely handle large base64 content
-          python3 - << PYEOF
-          import json, base64
-
-          with open("/tmp/mc-screenshot.png", "rb") as f:
-              content = base64.b64encode(f.read()).decode()
-
-          body = {
-              "message": "$COMMIT_MSG",
-              "content": content,
-              "branch": "screenshots",
-          }
-
-          existing_sha = "$EXISTING_SHA"
-          if existing_sha:
-              body["sha"] = existing_sha
-
-          with open("/tmp/upload-body.json", "w") as f:
-              json.dump(body, f)
-
-          print(f"Upload body written ({len(content)} chars of base64)")
-          PYEOF
+          # Write Python helper with single-quoted heredoc (no shell substitution),
+          # then pass variables as argv so there are no quoting/expansion issues.
+          cat > /tmp/make_body.py << 'PYEOF'
+import json, base64, sys
+img_path, commit_msg, existing_sha = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(img_path, "rb") as f:
+    content = base64.b64encode(f.read()).decode()
+body = {"message": commit_msg, "content": content, "branch": "screenshots"}
+if existing_sha:
+    body["sha"] = existing_sha
+with open("/tmp/upload-body.json", "w") as f:
+    json.dump(body, f)
+print(f"Upload body: {len(content)} base64 chars")
+PYEOF
+          python3 /tmp/make_body.py "/tmp/mc-screenshot.png" "$COMMIT_MSG" "$EXISTING_SHA" \
+            || { echo "WARNING: failed to build upload body"; exit 0; }
 
           # Upload to GitHub Contents API
           HTTP_STATUS=$(curl -sf -o /tmp/upload-response.json -w "%{http_code}" \
