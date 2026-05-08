@@ -8,14 +8,14 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-//? if mc >= "1.21.6" {
+//? if >=1.21.6 {
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 //?} else {
-/*import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;*/
-//?}
-//? if mc >= "26" {
+/*import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+*///?}
+//? if >=26 {
 import net.minecraft.resources.Identifier;
-//?} else if mc >= "1.21.6" {
+//?} else if >=1.21.6 {
 /*import net.minecraft.resources.ResourceLocation;*/
 //?}
 import org.slf4j.Logger;
@@ -47,19 +47,19 @@ public class BetterHUD implements ClientModInitializer {
 
         BetterHUDGUI betterHUDGUI = new BetterHUDGUI();
 
-        //? if mc >= "26" {
+        //? if >=26 {
         HudElementRegistry.addLast(
             Identifier.fromNamespaceAndPath("betterhud", "hud"),
             betterHUDGUI::onHudRender
         );
-        //?} else if mc >= "1.21.6" {
+        //?} else if >=1.21.6 {
         /*HudElementRegistry.addLast(
             ResourceLocation.fromNamespaceAndPath("betterhud", "hud"),
             betterHUDGUI::onHudRender
         );*/
         //?} else {
-        /*HudRenderCallback.EVENT.register(betterHUDGUI);*/
-        //?}
+        /*HudRenderCallback.EVENT.register(betterHUDGUI);
+        *///?}
         ClientTickEvents.START_CLIENT_TICK.register(betterHUDGUI);
     }
 }

@@ -20,7 +20,6 @@ apply plugin: isLegacy ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric
 def javaVersionInt = Integer.parseInt(project.java_version)
 def javaLang = JavaVersion.toVersion(javaVersionInt)
 def mixinJavaCompat = "JAVA_${javaVersionInt}"
-def mixinClientList = isLegacy ? '"MinecraftClientAccessor"' : ''
 
 version = "${project.mod_version}+mc${mcVersion}"
 group = project.maven_group
@@ -87,8 +86,7 @@ processResources {
 		minecraftReq  : project.mc_dep,
 		loaderReq     : project.loader_dep,
 		javaReq       : ">=${javaVersionInt}",
-		javaCompat    : mixinJavaCompat,
-		mixinClients  : mixinClientList
+		javaCompat    : mixinJavaCompat
 	]
 	inputs.properties expansion
 

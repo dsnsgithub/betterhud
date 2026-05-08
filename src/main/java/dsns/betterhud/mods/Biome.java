@@ -5,15 +5,15 @@ import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
 import java.util.LinkedHashMap;
 import java.util.Map;
-//? if mc < "26" {
-/*import java.util.Optional;*/
-//?}
+//? if <26 {
+/*import java.util.Optional;
+*///?}
 import net.minecraft.client.Minecraft;
-//? if mc >= "26" {
+//? if >=26 {
 import net.minecraft.core.Holder;
 //?} else {
-/*import net.minecraft.resources.ResourceKey;*/
-//?}
+/*import net.minecraft.resources.ResourceKey;
+*///?}
 import net.minecraft.world.entity.player.Player;
 
 public class Biome implements BaseMod {
@@ -37,7 +37,7 @@ public class Biome implements BaseMod {
         if (player == null) return null;
 
         // have to specify this because name of class is Biome
-        //? if mc >= "26" {
+        //? if >=26 {
         Holder<net.minecraft.world.level.biome.Biome> biome = client.level.getBiome(player.blockPosition());
 
         if (!biome.unwrapKey().isPresent()) return null;
@@ -49,8 +49,8 @@ public class Biome implements BaseMod {
 
         if (!biome.isPresent()) return null;
 
-        String biomeString = formatSnakeCase(biome.get().location().getPath());*/
-        //?}
+        String biomeString = formatSnakeCase(biome.get().location().getPath());
+        *///?}
 
         // used to maintain order when iterating
         LinkedHashMap<String, Integer> biomeColors = new LinkedHashMap<>();
