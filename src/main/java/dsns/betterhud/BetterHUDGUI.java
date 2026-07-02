@@ -72,7 +72,7 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         DeltaTracker tickCounter
     ) {
         if (client.getDebugOverlay().showDebugScreen()) return;
-        if (client.options.hideGui) return;
+        if (client.gui.hud.isHidden()) return;
 
         int x = horizontalMargin;
         int y = verticalMargin;
