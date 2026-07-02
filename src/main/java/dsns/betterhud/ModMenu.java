@@ -187,9 +187,30 @@ public class ModMenu implements ModMenuApi {
             .setExpanded(false)
             .setTooltip(
                 Component.literal(
-                    "Colors used to draw the module."
+                    "Size and colors used to draw the module."
                 )
             );
+
+        Setting scale = settings.getSetting("Scale");
+        appearanceGroup.add(
+            entryBuilder
+                .startDoubleField(
+                    Component.literal("Scale"),
+                    scale.getDoubleValue()
+                )
+                .setDefaultValue(Double.parseDouble(scale.getDefaultValue()))
+                .setMin(parseDoubleBound(scale, 0, 0.1))
+                .setMax(parseDoubleBound(scale, 1, 10.0))
+                .setTooltip(
+                    Component.literal(
+                        "Size multiplier applied to the module (1.0 = default size)."
+                    )
+                )
+                .setSaveConsumer(value ->
+                    scale.setValue(String.valueOf(value))
+                )
+                .build()
+        );
 
         Setting textColor = settings.getSetting("Text Color");
         appearanceGroup.add(
@@ -248,6 +269,22 @@ public class ModMenu implements ModMenuApi {
         }
         try {
             return Integer.parseInt(possible[index]);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private static double parseDoubleBound(
+        Setting setting,
+        int index,
+        double fallback
+    ) {
+        String[] possible = setting.getPossibleValues();
+        if (possible == null || possible.length <= index) {
+            return fallback;
+        }
+        try {
+            return Double.parseDouble(possible[index]);
         } catch (NumberFormatException e) {
             return fallback;
         }
