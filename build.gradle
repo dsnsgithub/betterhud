@@ -32,7 +32,7 @@ repositories {
 }
 
 // MC 26+ uses fabric-rendering-v1's transitive deps but rejects ASM coming from
-// annotation processors; matches main's existing build.
+// annotation processors.
 if (!isLegacy) {
 	configurations.configureEach {
 		if (name.toLowerCase().contains('annotationprocessor')) {

@@ -3,8 +3,12 @@
 # real production Fabric client under XVFB with the covering variant's jar and
 # version-matched runtime mods, enters a survival singleplayer world with the
 # HUD active, screenshots it, and fails if anything crashes on the way.
-# Finally, the screenshot report job embeds all screenshots in a PR comment
-# (via the ci-screenshots branch) and in the job summary.
+# The screenshot report job embeds all screenshots in a PR comment (via the
+# ci-screenshots branch) and in the job summary, and the modrinth bundle job
+# packages the release jars with their per-jar Minecraft version lists.
+#
+# Both job matrices are generated from supported-versions.json — add a version
+# there (see README) and every job picks it up.
 
 name: build
 on: push
@@ -16,21 +20,28 @@ permissions:
   pull-requests: write
 
 jobs:
+  matrices:
+    name: compute matrices
+    runs-on: ubuntu-24.04
+    outputs:
+      build: ${{ steps.gen.outputs.build }}
+      launch: ${{ steps.gen.outputs.launch }}
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+
+      - name: generate matrices from supported-versions.json
+        id: gen
+        run: bash .github/scripts/generate-matrices.sh
+
   build:
     name: build mc${{ matrix.mc }}
     runs-on: ubuntu-24.04
+    needs: matrices
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - mc: '1.21'
-            java: '21'
-          - mc: '1.21.6'
-            java: '21'
-          - mc: '26.1'
-            java: '25'
-          - mc: '26.2'
-            java: '25'
+        include: ${{ fromJson(needs.matrices.outputs.build) }}
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
@@ -58,8 +69,7 @@ jobs:
 
   # One job per supported Minecraft version (not per build variant): the
   # 1.21 variant jar is launch-tested on 1.21-1.21.5, the 1.21.6 variant jar
-  # on 1.21.6-1.21.11, and so on. Keep this matrix in sync with the
-  # runtimeMatrix table in launchtest/build.gradle.
+  # on 1.21.6-1.21.11, and so on.
   #
   # pregen_world marks versions whose Fabric API has no client gametest module
   # (before 1.21.4): for those a vanilla world save is generated first with
@@ -68,27 +78,12 @@ jobs:
   launch-test:
     name: launch mc${{ matrix.mc }}
     runs-on: ubuntu-24.04
+    needs: matrices
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { mc: '1.21',    java: '21', pregen_world: true }
-          - { mc: '1.21.1',  java: '21', pregen_world: true }
-          - { mc: '1.21.2',  java: '21', pregen_world: true }
-          - { mc: '1.21.3',  java: '21', pregen_world: true }
-          - { mc: '1.21.4',  java: '21' }
-          - { mc: '1.21.5',  java: '21' }
-          - { mc: '1.21.6',  java: '21' }
-          - { mc: '1.21.7',  java: '21' }
-          - { mc: '1.21.8',  java: '21' }
-          - { mc: '1.21.9',  java: '21' }
-          - { mc: '1.21.10', java: '21' }
-          - { mc: '1.21.11', java: '21' }
-          - { mc: '26.1',    java: '25' }
-          - { mc: '26.1.1',  java: '25' }
-          - { mc: '26.1.2',  java: '25' }
-          - { mc: '26.2',    java: '25' }
+        include: ${{ fromJson(needs.matrices.outputs.launch) }}
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
@@ -156,12 +151,7 @@ jobs:
           script: |
             const fs = require('fs');
 
-            // Keep in sync with the launch-test matrix above.
-            const versions = [
-              '1.21', '1.21.1', '1.21.2', '1.21.3', '1.21.4', '1.21.5',
-              '1.21.6', '1.21.7', '1.21.8', '1.21.9', '1.21.10', '1.21.11',
-              '26.1', '26.1.1', '26.1.2', '26.2',
-            ];
+            const versions = Object.keys(JSON.parse(fs.readFileSync('supported-versions.json', 'utf8')));
             const dir = `screenshots-publish/${context.sha}`;
             const base = `https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/ci-screenshots/${context.sha}`;
 
@@ -217,3 +207,36 @@ jobs:
                 issue_number: pr.number, body,
               });
             }
+
+  # Builds every variant and bundles the release jars together with UPLOAD.md,
+  # which lists exactly which Minecraft versions to select for each jar when
+  # uploading to Modrinth. Download the "modrinth-upload" artifact and follow it.
+  modrinth-bundle:
+    name: modrinth bundle
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: setup jdk 21 and 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: |
+            21
+            25
+          distribution: 'microsoft'
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: build all variants and write the upload guide
+        run: ./gradlew modrinthBundle --stacktrace "-Porg.gradle.java.installations.paths=$JAVA_HOME_21_X64,$JAVA_HOME_25_X64"
+
+      - name: upload modrinth bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: modrinth-upload
+          path: build/modrinth/

@@ -1,4 +1,4 @@
-// Production client launch test harness (multi-version port of PR #22).
+// Production client launch test harness.
 //
 // Boots a REAL production Fabric client (fabric-loader + vanilla Minecraft +
 // the built betterhud jar + its runtime dependency mods) for ANY supported
@@ -16,7 +16,7 @@
 //
 // The test driver mod compiled by this project comes in three flavours,
 // because Fabric's client gametest API only exists from 1.21.4:
-//  - 26.x:           /src/gametest (shared with main, Mojang-style API names)
+//  - 26.x:           /src/gametest (Mojang-style gametest API names, 5.x)
 //  - 1.21.4-1.21.11: src/gametest-legacy (same test, Yarn-style API names)
 //  - 1.21-1.21.3:    src/fallback (no gametest API: joins a pre-generated
 //                    world via --quickPlaySingleplayer, screenshots, exits;
@@ -28,39 +28,22 @@ plugins {
 }
 
 // ---------------------------------------------------------------------------
-// Runtime compatibility matrix: one row per launchable Minecraft version.
-//  - variant:   the Stonecutter build variant whose jar covers this version
-//  - fabricApi: newest Fabric API built for exactly this version
-//  - modmenu:   newest Mod Menu whose fabric.mod.json accepts this version
-//  - cloth:     newest Cloth Config whose fabric.mod.json accepts this version
-//  - gametest:  whether this Fabric API provides fabric-client-gametest-api-v1
-//               (absent before 1.21.4; those versions use src/fallback)
+// supported-versions.json (repo root) is the single source of truth for the
+// launchable Minecraft versions. Per version it pins:
+//  - variant:        the Stonecutter build variant whose jar covers it
+//  - fabricApi:      newest Fabric API built for exactly this version
+//  - modmenu:        newest Mod Menu whose fabric.mod.json accepts this version
+//  - cloth:          newest Cloth Config whose fabric.mod.json accepts this version
+//  - clientGametest: whether this Fabric API provides fabric-client-gametest-api-v1
+//                    (absent before 1.21.4; those versions use src/fallback)
 // All mod versions were verified against each jar's declared `depends` range.
-// Keep in sync with the launch-test matrix in .github/workflows/build.yml.
 // ---------------------------------------------------------------------------
-def runtimeMatrix = [
-	'1.21'   : [variant: '1.21',   fabricApi: '0.102.0+1.21',    modmenu: '11.0.4',        cloth: '15.0.140',  gametest: false],
-	'1.21.1' : [variant: '1.21',   fabricApi: '0.116.13+1.21.1', modmenu: '11.0.4',        cloth: '15.0.140',  gametest: false],
-	'1.21.2' : [variant: '1.21',   fabricApi: '0.106.1+1.21.2',  modmenu: '12.0.1',        cloth: '16.0.143',  gametest: false],
-	'1.21.3' : [variant: '1.21',   fabricApi: '0.114.1+1.21.3',  modmenu: '12.0.1',        cloth: '16.0.143',  gametest: false],
-	'1.21.4' : [variant: '1.21',   fabricApi: '0.119.4+1.21.4',  modmenu: '13.0.4',        cloth: '17.0.144',  gametest: true],
-	'1.21.5' : [variant: '1.21',   fabricApi: '0.128.2+1.21.5',  modmenu: '14.0.2',        cloth: '18.0.145',  gametest: true],
-	'1.21.6' : [variant: '1.21.6', fabricApi: '0.128.2+1.21.6',  modmenu: '15.0.2',        cloth: '19.0.147',  gametest: true],
-	'1.21.7' : [variant: '1.21.6', fabricApi: '0.129.0+1.21.7',  modmenu: '15.0.2',        cloth: '19.0.147',  gametest: true],
-	'1.21.8' : [variant: '1.21.6', fabricApi: '0.136.1+1.21.8',  modmenu: '15.0.2',        cloth: '19.0.147',  gametest: true],
-	'1.21.9' : [variant: '1.21.6', fabricApi: '0.134.1+1.21.9',  modmenu: '16.0.1',        cloth: '20.0.149',  gametest: true],
-	'1.21.10': [variant: '1.21.6', fabricApi: '0.138.4+1.21.10', modmenu: '16.0.1',        cloth: '21.11.153', gametest: true],
-	'1.21.11': [variant: '1.21.6', fabricApi: '0.141.4+1.21.11', modmenu: '17.0.0',        cloth: '21.11.153', gametest: true],
-	'26.1'   : [variant: '26.1',   fabricApi: '0.145.1+26.1',    modmenu: '18.0.0-beta.1', cloth: '26.1.154',  gametest: true],
-	'26.1.1' : [variant: '26.1',   fabricApi: '0.145.4+26.1.1',  modmenu: '18.0.0-beta.1', cloth: '26.1.154',  gametest: true],
-	'26.1.2' : [variant: '26.1',   fabricApi: '0.154.0+26.1.2',  modmenu: '18.0.0-beta.1', cloth: '26.1.154',  gametest: true],
-	'26.2'   : [variant: '26.2',   fabricApi: '0.154.0+26.2',    modmenu: '20.0.0-beta.4', cloth: '26.2.155',  gametest: true],
-]
+def supportedVersions = new groovy.json.JsonSlurper().parse(new File(rootDir, 'supported-versions.json'))
 
-def testMcVersion = providers.gradleProperty('testMcVersion').getOrElse('26.2')
-def entry = runtimeMatrix[testMcVersion]
+def testMcVersion = providers.gradleProperty('testMcVersion').getOrElse(supportedVersions.keySet().last())
+def entry = supportedVersions[testMcVersion]
 if (entry == null) {
-	throw new GradleException("Unsupported testMcVersion '${testMcVersion}'. Supported versions: ${runtimeMatrix.keySet().join(', ')}")
+	throw new GradleException("Unsupported testMcVersion '${testMcVersion}'. Supported versions: ${supportedVersions.keySet().join(', ')}")
 }
 
 // Reuse the covering variant's loader and Java versions so the launch matches
@@ -95,7 +78,7 @@ if (!isLegacy) {
 }
 
 // Pick the test driver source flavour for this Minecraft version (see header).
-if (entry.gametest) {
+if (entry.clientGametest) {
 	sourceSets.main.java.srcDirs = [isLegacy ? 'src/gametest-legacy/java' : "${rootDir}/src/gametest/java"]
 	sourceSets.main.resources.srcDirs = ["${rootDir}/src/gametest/resources"]
 } else {
@@ -110,7 +93,7 @@ dependencies {
 		mappings loom.officialMojangMappings()
 		modImplementation "net.fabricmc:fabric-loader:${loaderVersion}"
 		modImplementation "net.fabricmc.fabric-api:fabric-api:${entry.fabricApi}"
-		if (entry.gametest) {
+		if (entry.clientGametest) {
 			modImplementation fabricApi.module('fabric-client-gametest-api-v1', entry.fabricApi)
 		}
 	} else {
@@ -127,7 +110,7 @@ dependencies {
 	productionRuntimeMods("com.terraformersmc:modmenu:${entry.modmenu}") { transitive = false }
 	productionRuntimeMods("me.shedaniel.cloth:cloth-config-fabric:${entry.cloth}") { transitive = false }
 
-	if (entry.gametest) {
+	if (entry.clientGametest) {
 		// Handles -Dfabric.client.gametest in the production client. Not part
 		// of the fabric-api fat jar, so it is loaded as its own mod.
 		productionRuntimeMods(fabricApi.module('fabric-client-gametest-api-v1', entry.fabricApi)) { transitive = false }
@@ -157,7 +140,7 @@ def ownJarTask = tasks.names.contains('remapJar') ? 'remapJar' : 'jar'
 tasks.register('runProductionClientGameTest', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
 	mods.setFrom(variantProject.tasks.named(variantJarTask), tasks.named(ownJarTask), configurations.productionRuntimeMods)
 
-	if (entry.gametest) {
+	if (entry.clientGametest) {
 		// Fabric's client gametest runner drives the test and shuts the game
 		// down after the registered gametest (src/gametest) finishes.
 		jvmArgs.add('-Dfabric.client.gametest')
