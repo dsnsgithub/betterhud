@@ -4,7 +4,7 @@ plugins {
 
 // The "active" version determines which variant the source tree currently shows
 // uncommented. Switch with `./gradlew "Set active version to <ver>"` (Stonecutter task).
-stonecutter.active('26.1') /* [SC] DO NOT EDIT */
+stonecutter.active('26.2') /* [SC] DO NOT EDIT */
 
 // Stonecutter 0.7+ no longer needs explicit `registerChiseled` task: running
 // `./gradlew build` from the root automatically runs `build` for every version

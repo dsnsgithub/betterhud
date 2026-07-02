@@ -4,10 +4,7 @@ import java.util.LinkedHashMap;
 
 public class ModSettings {
 
-    private LinkedHashMap<String, Setting> settings = new LinkedHashMap<
-        String,
-        Setting
-    >();
+    private LinkedHashMap<String, Setting> settings = new LinkedHashMap<>();
 
     public ModSettings() {
         settings.put("Enabled", Setting.createBooleanSetting(true));
@@ -29,6 +26,7 @@ public class ModSettings {
         settings.put("Custom X", Setting.createIntegerSetting(0, 0, 100));
         settings.put("Custom Y", Setting.createIntegerSetting(0, 0, 100));
         settings.put("Text Color", Setting.createColorSetting(0xffffffff));
+        settings.put("Scale", Setting.createDoubleSetting(1.0, 0.1, 10.0));
         settings.put(
             "Background Color",
             Setting.createColorSetting(0x88000000)

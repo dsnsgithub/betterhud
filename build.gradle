@@ -14,8 +14,6 @@ def hasHudElementRegistry = stonecutter.eval(mcVersion, '>=1.21.6')  // 1.21.6+ 
 
 apply plugin: isLegacy ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric-loom'
 
-// `stonecutter` is injected into each version subproject. `stonecutter.current.version`
-// is the MC string, e.g. "1.21", "1.21.6", "26.1".
 // Per-MC Java version (21 for 1.21.x, 25 for 26.1+).
 def javaVersionInt = Integer.parseInt(project.java_version)
 def javaLang = JavaVersion.toVersion(javaVersionInt)
@@ -43,11 +41,9 @@ if (!isLegacy) {
 	}
 }
 
-// MC 26+ ships with Mojang official names baked into the runtime, so loom skips
-// the intermediary remap entirely - mods link directly via `implementation`
-// and `mappings` must NOT be declared.
-// 1.21.x uses intermediary at runtime, so deps must go through `modImplementation`
-// for loom to remap them, and `mappings loom.officialMojangMappings()` is required.
+// Every variant declares fabric-api, modmenu, and cloth-config as runtime deps
+// (not bundled). 1.21.x uses modImplementation for intermediary remapping; 26.x
+// uses plain implementation against unobfuscated MC.
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
@@ -55,38 +51,34 @@ dependencies {
 		mappings loom.officialMojangMappings()
 
 		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-		modImplementation include(fabricApi.module('fabric-api-base', project.fabric_api_version))
-		modImplementation include(fabricApi.module('fabric-rendering-v1', project.fabric_api_version))
-
-		// 1.21 (pre-1.21.6) needs lifecycle-events as an explicit module; later versions
-		// pull it transitively through rendering-v1.
-		if (!hasHudElementRegistry) {
-			modImplementation include(fabricApi.module('fabric-lifecycle-events-v1', project.fabric_api_version))
-		}
-
-		modImplementation include("com.terraformersmc:modmenu:${project.modmenu_version}")
-		modImplementation include("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+		modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+		modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+		modImplementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
 			exclude(group: 'net.fabricmc.fabric-api')
 		}
 	} else {
 		implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-		implementation include(fabricApi.module('fabric-api-base', project.fabric_api_version))
-		implementation include(fabricApi.module('fabric-rendering-v1', project.fabric_api_version))
-
-		implementation include("com.terraformersmc:modmenu:${project.modmenu_version}")
-		implementation include("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+		implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+		implementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+		implementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
 			exclude(group: 'net.fabricmc.fabric-api')
 		}
 	}
 }
 
 processResources {
+	def dependsExtra = ''',
+		"fabric-api": "*",
+		"modmenu": "*",
+		"cloth-config2": "*"'''
+
 	def expansion = [
 		version       : project.version,
 		minecraftReq  : project.mc_dep,
 		loaderReq     : project.loader_dep,
 		javaReq       : ">=${javaVersionInt}",
-		javaCompat    : mixinJavaCompat
+		javaCompat    : mixinJavaCompat,
+		dependsExtra  : dependsExtra
 	]
 	inputs.properties expansion
 

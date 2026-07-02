@@ -23,6 +23,6 @@
 	"depends": {
 		"fabricloader": "${loaderReq}",
 		"minecraft": "${minecraftReq}",
-		"java": "${javaReq}"
+		"java": "${javaReq}"${dependsExtra}
 	}
 }

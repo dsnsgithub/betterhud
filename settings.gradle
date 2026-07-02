@@ -24,13 +24,12 @@ plugins {
 stonecutter {
 	create(rootProject) {
 		// Each entry is one buildable variant. The string is both the subproject name
-		// and the MC version. These cover support/1.21-1.21.5, support/1.21.6-1.21.11,
-		// and main 26.1.
-		versions('1.21', '1.21.6', '26.1')
+		// and the MC version. These cover 1.21-1.21.5, 1.21.6-1.21.11, 26.1, and 26.2.
+		versions('1.21', '1.21.6', '26.1', '26.2')
 
 		// vcsVersion is the variant whose form is used as the canonical (active) version
-		// in source. We pick 26.1 so `git diff main` stays small.
-		vcsVersion = '26.1'
+		// in source. We pick 26.2 so `git diff main` stays small.
+		vcsVersion = '26.2'
 	}
 }
 

@@ -60,6 +60,14 @@ public class Setting {
         );
     }
 
+    public static Setting createFloatSetting(float value, float min, float max) {
+        return new Setting(
+            String.valueOf(value),
+            "float",
+            new String[] { String.valueOf(min), String.valueOf(max) }
+        );
+    }
+
     public String getType() {
         return type;
     }
@@ -74,6 +82,10 @@ public class Setting {
 
     public double getDoubleValue() {
         return Double.parseDouble(value);
+    }
+
+    public float getFloatValue() {
+        return Float.parseFloat(value);
     }
 
     public int getColorValue() {

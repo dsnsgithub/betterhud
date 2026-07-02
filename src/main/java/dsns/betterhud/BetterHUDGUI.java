@@ -7,21 +7,26 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 //? if <1.21.6 {
-/*import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-*///?}
+/*import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;*/
+//?}
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 //? if >=26 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 //?} else {
-/*import net.minecraft.client.gui.GuiGraphics;
-*///?}
+/*import net.minecraft.client.gui.GuiGraphics;*/
+//?}
+//? if >=1.21.6 {
+import org.joml.Matrix3x2fStack;
+//?} else {
+/*import com.mojang.blaze3d.vertex.PoseStack;*/
+//?}
 
 //? if >=1.21.6 {
 public class BetterHUDGUI implements ClientTickEvents.StartTick {
 //?} else {
-/*public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTick {
-*///?}
+/*public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTick {*/
+//?}
 
     public static int verticalPadding = 4;
     public static int horizontalPadding = 4;
@@ -82,29 +87,29 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         //? if >=26 {
         GuiGraphicsExtractor drawContext,
         //?} else {
-        /*GuiGraphics drawContext,
-        *///?}
+        /*GuiGraphics drawContext,*/
+        //?}
         DeltaTracker tickCounter
     ) {
         if (client.getDebugOverlay().showDebugScreen()) return;
-        if (client.options.hideGui) return;
+        //? if >=26.2 {
+        if (client.gui.hud.isHidden()) return;
+        //?} else {
+        /*if (client.options.hideGui) return;*/
+        //?}
 
         int x = horizontalMargin;
         int y = verticalMargin;
 
         for (CustomText text : topLeftText) {
             drawString(drawContext, text, x, y);
-
-            y +=
-                (client.font.lineHeight - 1) +
-                (verticalPadding * 2) +
-                lineHeight;
+            y += scaledElementHeight(text) + lineHeight;
         }
 
         y = client.getWindow().getGuiScaledHeight() - verticalMargin;
 
         for (CustomText text : bottomLeftList) {
-            y -= (client.font.lineHeight - 1) + (verticalPadding * 2);
+            y -= scaledElementHeight(text);
             drawString(drawContext, text, x, y);
             y -= lineHeight;
         }
@@ -117,25 +122,15 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
                 horizontalMargin;
             x = client.getWindow().getGuiScaledWidth() - offset;
             drawString(drawContext, text, x, y);
-
-            y +=
-                (client.font.lineHeight - 1) +
-                (verticalPadding * 2) +
-                lineHeight;
+            y += scaledElementHeight(text) + lineHeight;
         }
 
         y = client.getWindow().getGuiScaledHeight() - verticalMargin;
         for (CustomText text : bottomRightText) {
-            int offset =
-                (client.font.width(text.text) - 1) +
-                (horizontalPadding * 2) +
-                horizontalMargin;
+            int offset = scaledElementWidth(text) + horizontalMargin;
             x = client.getWindow().getGuiScaledWidth() - offset;
-
-            y -= (client.font.lineHeight - 1) + (verticalPadding * 2);
-
+            y -= scaledElementHeight(text);
             drawString(drawContext, text, x, y);
-
             y -= lineHeight;
         }
 
@@ -144,13 +139,9 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             float yPercent = text.customY / 100.0f;
 
             int maxX =
-                client.getWindow().getGuiScaledWidth() -
-                (horizontalPadding * 2) -
-                (client.font.width(text.text) - 1);
+                client.getWindow().getGuiScaledWidth() - scaledElementWidth(text);
             int maxY =
-                client.getWindow().getGuiScaledHeight() -
-                (verticalPadding * 2) -
-                (client.font.lineHeight - 1);
+                client.getWindow().getGuiScaledHeight() - scaledElementHeight(text);
 
             int scaledX = (int) (xPercent * maxX);
             int scaledY = (int) (yPercent * maxY);
@@ -163,28 +154,35 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         //? if >=26 {
         GuiGraphicsExtractor drawContext,
         //?} else {
-        /*GuiGraphics drawContext,
-        *///?}
+        /*GuiGraphics drawContext,*/
+        //?}
         CustomText text,
         int x,
         int y
     ) {
-        drawContext.fill(
-            x,
-            y,
-            x +
-                (client.font.width(text.text) - 1) +
-                (horizontalPadding * 2),
-            y + (client.font.lineHeight - 1) + (verticalPadding * 2),
-            text.backgroundColor
-        );
+        //? if >=1.21.6 {
+        Matrix3x2fStack poses = drawContext.pose();
+        poses.pushMatrix();
+        poses.translate(x, y);
+        poses.scale(text.scale, text.scale);
+        //?} else {
+        /*PoseStack poses = drawContext.pose();
+        poses.pushPose();
+        poses.translate(x, y, 0);
+        poses.scale(text.scale, text.scale, 1);*/
+        //?}
+
+        int w = (client.font.width(text.text) - 1) + (horizontalPadding * 2);
+        int h = (client.font.lineHeight - 1) + (verticalPadding * 2);
+
+        drawContext.fill(0, 0, w, h, text.backgroundColor);
 
         //? if >=26 {
         drawContext.text(
             client.font,
             text.text,
-            x + horizontalPadding,
-            y + verticalPadding,
+            horizontalPadding,
+            verticalPadding,
             text.color,
             true
         );
@@ -192,11 +190,27 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         /*drawContext.drawString(
             client.font,
             text.text,
-            x + horizontalPadding,
-            y + verticalPadding,
+            horizontalPadding,
+            verticalPadding,
             text.color,
             true
-        );
-        *///?}
+        );*/
+        //?}
+
+        //? if >=1.21.6 {
+        poses.popMatrix();
+        //?} else {
+        /*poses.popPose();*/
+        //?}
+    }
+
+    private int scaledElementWidth(CustomText text) {
+        int w = (client.font.width(text.text) - 1) + (horizontalPadding * 2);
+        return (int) (w * text.scale);
+    }
+
+    private int scaledElementHeight(CustomText text) {
+        int h = (client.font.lineHeight - 1) + (verticalPadding * 2);
+        return (int) (h * text.scale);
     }
 }
