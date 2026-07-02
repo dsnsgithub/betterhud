@@ -6,6 +6,12 @@
 name: build
 on: push
 
+# contents: write lets the screenshot step push to the ci-screenshots branch,
+# pull-requests: write lets it comment on the associated pull request.
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -30,6 +36,94 @@ jobs:
         # Boots a production Fabric client with the built jar and all dependency
         # mods, and fails the build if the game does not reach the title screen.
         run: ./gradlew runProductionClientGameTest
+      - name: comment screenshot on pr
+        # Publishes the in-world screenshot to the ci-screenshots branch and
+        # embeds it in a PR comment as a visual sanity check of the HUD.
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const dir = 'run/screenshots';
+            const shot = fs.existsSync(dir)
+              && fs.readdirSync(dir).find(f => f.endsWith('_betterhud-survival-world.png'));
+            if (!shot) {
+              core.setFailed('The survival world screenshot was not created');
+              return;
+            }
+
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+            });
+            const pr = prs.find(p => p.state === 'open');
+            if (!pr) {
+              core.info('No open pull request for this commit, skipping comment');
+              return;
+            }
+
+            // Make sure the ci-screenshots branch exists so the contents API can commit to it.
+            const branch = 'ci-screenshots';
+            try {
+              await github.rest.git.getRef({
+                owner: context.repo.owner, repo: context.repo.repo, ref: `heads/${branch}`,
+              });
+            } catch (e) {
+              if (e.status !== 404) throw e;
+              await github.rest.git.createRef({
+                owner: context.repo.owner, repo: context.repo.repo,
+                ref: `refs/heads/${branch}`, sha: context.sha,
+              });
+            }
+
+            // Commit the screenshot under the commit sha so old PR comments keep working.
+            const dest = `${context.sha}/betterhud-survival-world.png`;
+            let existingFileSha;
+            try {
+              const { data: existingFile } = await github.rest.repos.getContent({
+                owner: context.repo.owner, repo: context.repo.repo, path: dest, ref: branch,
+              });
+              existingFileSha = existingFile.sha;
+            } catch (e) {
+              if (e.status !== 404) throw e;
+            }
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner, repo: context.repo.repo, branch,
+              path: dest,
+              message: `CI screenshot for ${context.sha}`,
+              content: fs.readFileSync(path.join(dir, shot)).toString('base64'),
+              ...(existingFileSha && { sha: existingFileSha }),
+            });
+
+            const url = `https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/${branch}/${dest}`;
+            const marker = '<!-- betterhud-launch-screenshot -->';
+            const body = [
+              marker,
+              '### Client launch test',
+              `The game launched and entered a survival singleplayer world on \`${context.sha.slice(0, 7)}\`:`,
+              '',
+              `![BetterHUD in a survival world](${url})`,
+            ].join('\n');
+
+            // Keep a single comment up to date instead of posting one per push.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: pr.number, per_page: 100,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: pr.number, body,
+              });
+            }
       - name: capture game logs
         if: always()
         uses: actions/upload-artifact@v7
