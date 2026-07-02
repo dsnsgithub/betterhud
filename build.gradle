@@ -10,7 +10,6 @@ plugins {
 
 def mcVersion = stonecutter.current.version
 def isLegacy = stonecutter.eval(mcVersion, '<26')      // 1.21.x family
-def hasHudElementRegistry = stonecutter.eval(mcVersion, '>=1.21.6')  // 1.21.6+ and 26+
 
 apply plugin: isLegacy ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric-loom'
 
@@ -44,25 +43,20 @@ if (!isLegacy) {
 // Every variant declares fabric-api, modmenu, and cloth-config as runtime deps
 // (not bundled). 1.21.x uses modImplementation for intermediary remapping; 26.x
 // uses plain implementation against unobfuscated MC.
+def implCfg = isLegacy ? 'modImplementation' : 'implementation'
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
 	if (isLegacy) {
 		mappings loom.officialMojangMappings()
+	}
 
-		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-		modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-		modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
-		modImplementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
-			exclude(group: 'net.fabricmc.fabric-api')
-		}
-	} else {
-		implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-		implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-		implementation "com.terraformersmc:modmenu:${project.modmenu_version}"
-		implementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
-			exclude(group: 'net.fabricmc.fabric-api')
-		}
+	add(implCfg, "net.fabricmc:fabric-loader:${project.loader_version}")
+	add(implCfg, "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}")
+	add(implCfg, "com.terraformersmc:modmenu:${project.modmenu_version}")
+	add(implCfg, "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+		exclude(group: 'net.fabricmc.fabric-api')
 	}
 }
 
