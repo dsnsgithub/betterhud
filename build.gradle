@@ -29,14 +29,45 @@ dependencies {
 	
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	implementation include(fabricApi.module("fabric-api-base", project.fabric_api_version))
-	implementation include(fabricApi.module("fabric-rendering-v1", project.fabric_api_version))
-	
-	implementation include("com.terraformersmc:modmenu:${project.modmenu_version}")
-	implementation include("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	implementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+	implementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
+
+	// Mods loaded alongside the built jar by runProductionClientGameTest.
+	productionRuntimeMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	productionRuntimeMods "com.terraformersmc:modmenu:${project.modmenu_version}"
+	productionRuntimeMods "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
+}
+
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "betterhud-gametest"
+		enableGameTests = false
+		enableClientGameTests = true
+		eula = true
+	}
+}
+
+// Packages the gametest source set as a mod so the client gametests can also run
+// inside the production client launched by runProductionClientGameTest.
+tasks.register("gametestJar", Jar) {
+	from sourceSets.gametest.output
+	archiveClassifier = "gametest"
+}
+
+// Launches a real production Fabric client (fabric-loader + the built mod jar +
+// productionRuntimeMods + the gametest mod) and exits once the client gametests
+// have run: the game must reach the title screen, generate and enter a survival
+// singleplayer world, and shut down without crashing.
+// On Linux CI (CI env var set) Loom automatically runs the game under XVFB.
+tasks.register("runProductionClientGameTest", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+	jvmArgs.add("-Dfabric.client.gametest")
+	jvmArgs.add("-Dfabric.client.gametest.disableNetworkSynchronizer=true")
+	mods.from(tasks.named("gametestJar"))
 }
 
 processResources {
