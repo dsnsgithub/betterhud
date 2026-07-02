@@ -1,9 +1,19 @@
-# Build the mod against every Minecraft variant Stonecutter is configured for.
-# Each matrix job builds one variant and uploads its jar.
-# Running `./gradlew build` from the root builds all four in one go.
+# Build the mod for every Stonecutter variant, then launch-test the built jars
+# on EVERY supported Minecraft version concurrently: each launch job boots a
+# real production Fabric client under XVFB with the covering variant's jar and
+# version-matched runtime mods, enters a survival singleplayer world with the
+# HUD active, screenshots it, and fails if anything crashes on the way.
+# Finally, the screenshot report job embeds all screenshots in a PR comment
+# (via the ci-screenshots branch) and in the job summary.
 
 name: build
 on: push
+
+# contents: write lets the screenshot report push to the ci-screenshots branch,
+# pull-requests: write lets it comment on the associated pull request.
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   build:
@@ -45,3 +55,165 @@ jobs:
         with:
           name: betterhud-mc${{ matrix.mc }}
           path: versions/${{ matrix.mc }}/build/libs/*.jar
+
+  # One job per supported Minecraft version (not per build variant): the
+  # 1.21 variant jar is launch-tested on 1.21-1.21.5, the 1.21.6 variant jar
+  # on 1.21.6-1.21.11, and so on. Keep this matrix in sync with the
+  # runtimeMatrix table in launchtest/build.gradle.
+  #
+  # pregen_world marks versions whose Fabric API has no client gametest module
+  # (before 1.21.4): for those a vanilla world save is generated first with
+  # that version's dedicated server, and the client auto-joins it instead of
+  # creating one through the gametest API.
+  launch-test:
+    name: launch mc${{ matrix.mc }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mc: '1.21',    java: '21', pregen_world: true }
+          - { mc: '1.21.1',  java: '21', pregen_world: true }
+          - { mc: '1.21.2',  java: '21', pregen_world: true }
+          - { mc: '1.21.3',  java: '21', pregen_world: true }
+          - { mc: '1.21.4',  java: '21' }
+          - { mc: '1.21.5',  java: '21' }
+          - { mc: '1.21.6',  java: '21' }
+          - { mc: '1.21.7',  java: '21' }
+          - { mc: '1.21.8',  java: '21' }
+          - { mc: '1.21.9',  java: '21' }
+          - { mc: '1.21.10', java: '21' }
+          - { mc: '1.21.11', java: '21' }
+          - { mc: '26.1',    java: '25' }
+          - { mc: '26.1.1',  java: '25' }
+          - { mc: '26.1.2',  java: '25' }
+          - { mc: '26.2',    java: '25' }
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: setup jdk ${{ matrix.java }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'microsoft'
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: install xvfb
+        # Provides a virtual display so the Minecraft client can launch headlessly.
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: generate singleplayer test world
+        if: ${{ matrix.pregen_world }}
+        run: bash .github/scripts/generate-test-world.sh ${{ matrix.mc }}
+
+      - name: launch minecraft ${{ matrix.mc }} with mod
+        run: ./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=${{ matrix.mc }} --stacktrace
+
+      - name: check survival world screenshot was taken
+        run: test -n "$(find launchtest/run/screenshots -name '*betterhud-survival-world.png' -print -quit 2>/dev/null)"
+
+      - name: upload screenshots
+        # Consumed by the screenshot-report job below.
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: launch-screenshots-mc${{ matrix.mc }}
+          path: launchtest/run/screenshots/
+          if-no-files-found: ignore
+
+      - name: upload game logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: launch-logs-mc${{ matrix.mc }}
+          path: launchtest/run/logs/
+          if-no-files-found: ignore
+
+  screenshot-report:
+    name: screenshot report
+    runs-on: ubuntu-24.04
+    needs: launch-test
+    if: ${{ always() }}
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+
+      - name: publish screenshots to the ci-screenshots branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/publish-screenshots.sh
+
+      - name: post screenshot grid to pull request and job summary
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Keep in sync with the launch-test matrix above.
+            const versions = [
+              '1.21', '1.21.1', '1.21.2', '1.21.3', '1.21.4', '1.21.5',
+              '1.21.6', '1.21.7', '1.21.8', '1.21.9', '1.21.10', '1.21.11',
+              '26.1', '26.1.1', '26.1.2', '26.2',
+            ];
+            const dir = `screenshots-publish/${context.sha}`;
+            const base = `https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/ci-screenshots/${context.sha}`;
+
+            const cells = versions.map(v => {
+              const file = `mc-${v}-survival.png`;
+              const ok = fs.existsSync(`${dir}/${file}`);
+              return ok
+                ? `<td align="center"><b>${v}</b><br><a href="${base}/${file}"><img src="${base}/${file}" width="200" alt="BetterHUD on Minecraft ${v}"></a></td>`
+                : `<td align="center"><b>${v}</b><br>❌ no screenshot</td>`;
+            });
+            let rows = '';
+            for (let i = 0; i < cells.length; i += 4) {
+              rows += `<tr>${cells.slice(i, i + 4).join('')}</tr>\n`;
+            }
+
+            const marker = '<!-- betterhud-launch-screenshots -->';
+            const body = [
+              marker,
+              '### Client launch test',
+              `The game launched and entered a survival singleplayer world with the HUD active, on every supported Minecraft version, for \`${context.sha.slice(0, 7)}\`. A ❌ means that version's launch test did not produce a screenshot — check its job. Title-screen screenshots and game logs are in the run artifacts.`,
+              '',
+              `<table>\n${rows}</table>`,
+            ].join('\n');
+
+            // Always show the grid in the job summary, even without a PR.
+            await core.summary.addRaw(body).write();
+
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+            });
+            const pr = prs.find(p => p.state === 'open');
+            if (!pr) {
+              core.info('No open pull request for this commit, skipping comment');
+              return;
+            }
+
+            // Keep a single comment up to date instead of posting one per push.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: pr.number, per_page: 100,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: pr.number, body,
+              });
+            }

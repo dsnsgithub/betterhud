@@ -34,3 +34,8 @@ stonecutter {
 }
 
 rootProject.name = 'betterhud'
+
+// Not a Stonecutter variant: a sourceless harness that launches a production
+// Fabric client for any supported MC version (-PtestMcVersion) with the
+// matching variant's built jar. Used by the CI launch-test matrix.
+include 'launchtest'
