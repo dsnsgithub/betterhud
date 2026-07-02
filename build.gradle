@@ -35,6 +35,21 @@ dependencies {
 	implementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
+
+	// Mods loaded alongside the built jar by runProductionClientGameTest.
+	productionRuntimeMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	productionRuntimeMods "com.terraformersmc:modmenu:${project.modmenu_version}"
+	productionRuntimeMods "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
+}
+
+// Launches a real production Fabric client (fabric-loader + the built mod jar +
+// productionRuntimeMods) and exits once the game reaches the title screen.
+// -Dfabric.client.gametest makes Fabric API shut the game down after running the
+// registered client gametests (none here, so it is a pure launch smoke test).
+// On Linux CI (CI env var set) Loom automatically runs the game under XVFB.
+tasks.register("runProductionClientGameTest", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+	jvmArgs.add("-Dfabric.client.gametest")
+	jvmArgs.add("-Dfabric.client.gametest.disableNetworkSynchronizer=true")
 }
 
 processResources {

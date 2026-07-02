@@ -23,6 +23,22 @@ jobs:
         run: chmod +x ./gradlew
       - name: build
         run: ./gradlew build
+      - name: install xvfb
+        # Provides a virtual display so the Minecraft client can launch headlessly.
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: launch minecraft client with mod
+        # Boots a production Fabric client with the built jar and all dependency
+        # mods, and fails the build if the game does not reach the title screen.
+        run: ./gradlew runProductionClientGameTest
+      - name: capture game logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-launch-test
+          path: |
+            run/logs/
+            run/screenshots/
+          if-no-files-found: ignore
       - name: capture build artifacts
         uses: actions/upload-artifact@v7
         with:
