@@ -3,7 +3,7 @@
 # Running `./gradlew build` from the root builds all four in one go.
 
 name: build
-on: [pull_request, push]
+on: push
 
 jobs:
   build:
