@@ -1,0 +1,65 @@
+plugins {
+	id 'dev.kikugie.stonecutter'
+}
+
+// The "active" version determines which variant the source tree currently shows
+// uncommented. Switch with `./gradlew "Set active version to <ver>"` (Stonecutter task).
+stonecutter.active('26.2') /* [SC] DO NOT EDIT */
+
+// Stonecutter 0.7+ no longer needs explicit `registerChiseled` task: running
+// `./gradlew build` from the root automatically runs `build` for every version
+// subproject. Per-version commands like `./gradlew :1.21:build` also work.
+
+// Groups every supported Minecraft version (supported-versions.json) by the
+// build variant whose jar covers it, e.g. '1.21' -> ['1.21', ..., '1.21.5'].
+def supportedVersions = new groovy.json.JsonSlurper().parse(file('supported-versions.json'))
+def gameVersionsByVariant = [:]
+supportedVersions.each { mc, info ->
+	gameVersionsByVariant.computeIfAbsent(info.variant) { [] } << mc
+}
+
+// Builds every variant and collects the release jars in build/modrinth/ along
+// with UPLOAD.md, which lists exactly which Minecraft versions to select for
+// each jar when uploading to Modrinth. CI publishes the same directory as the
+// "modrinth-upload" artifact on every push.
+tasks.register('modrinthBundle') {
+	group = 'publishing'
+	description = 'Collects the release jars and the per-jar Minecraft version lists for Modrinth.'
+	gameVersionsByVariant.keySet().each { dependsOn(":${it}:build") }
+
+	doLast {
+		def outDir = file('build/modrinth')
+		outDir.deleteDir()
+		outDir.mkdirs()
+
+		def rows = []
+		gameVersionsByVariant.each { variant, gameVersions ->
+			def jar = file("versions/${variant}/build/libs").listFiles().find {
+				it.name.endsWith('.jar') && !it.name.contains('-sources')
+			}
+			if (jar == null) {
+				throw new GradleException("No release jar found for variant ${variant} in versions/${variant}/build/libs")
+			}
+			java.nio.file.Files.copy(jar.toPath(), new File(outDir, jar.name).toPath())
+			rows << "| `${jar.name}` | ${gameVersions.join(', ')} |"
+		}
+
+		def manifest = new File(outDir, 'UPLOAD.md')
+		manifest.text = [
+			"# Modrinth upload — betterhud ${project.mod_version}",
+			'',
+			'Upload each jar below as its own Modrinth version, selecting exactly',
+			'the listed Minecraft versions for it. Loader: Fabric. Required',
+			'dependencies: Fabric API, Cloth Config, Mod Menu.',
+			'',
+			'| File | Minecraft versions |',
+			'| --- | --- |',
+			*rows,
+			''
+		].join('\n')
+
+		println()
+		println manifest.text
+		println "Bundle written to ${outDir}"
+	}
+}

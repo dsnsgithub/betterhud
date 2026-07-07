@@ -5,15 +5,28 @@ import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.ModSettings;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
-
-import org.joml.Matrix3x2fStack;
-
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+//? if <1.21.6 {
+/*import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;*/
+//?}
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+//? if >=26 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+//?} else {
+/*import net.minecraft.client.gui.GuiGraphics;*/
+//?}
+//? if >=1.21.6 {
+import org.joml.Matrix3x2fStack;
+//?} else {
+/*import com.mojang.blaze3d.vertex.PoseStack;*/
+//?}
 
+//? if >=1.21.6 {
 public class BetterHUDGUI implements ClientTickEvents.StartTick {
+//?} else {
+/*public class BetterHUDGUI implements HudRenderCallback, ClientTickEvents.StartTick {*/
+//?}
 
     public static int verticalPadding = 4;
     public static int horizontalPadding = 4;
@@ -40,25 +53,23 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
 
         for (BaseMod mod : BetterHUD.mods) {
             ModSettings modSettings = mod.getModSettings();
-            if (!modSettings.getSetting("Enabled").getBooleanValue())
-                continue;
+            if (!modSettings.getSetting("Enabled").getBooleanValue()) continue;
 
             CustomText modText = mod.onStartTick(client);
-            if (modText == null)
-                continue;
+            if (modText == null) continue;
 
             String orientation = modSettings
-                    .getSetting("Orientation")
-                    .getStringValue();
+                .getSetting("Orientation")
+                .getStringValue();
 
             if (modSettings.getSetting("Custom Position").getBooleanValue()) {
                 modText.customPosition = true;
                 modText.customX = modSettings
-                        .getSetting("Custom X")
-                        .getIntValue();
+                    .getSetting("Custom X")
+                    .getIntValue();
                 modText.customY = modSettings
-                        .getSetting("Custom Y")
-                        .getIntValue();
+                    .getSetting("Custom Y")
+                    .getIntValue();
                 this.customPositionText.add(modText);
             } else if (orientation.equals("top-left")) {
                 this.topLeftText.add(modText);
@@ -73,19 +84,25 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     }
 
     public void onHudRender(
-            GuiGraphicsExtractor drawContext,
-            DeltaTracker tickCounter) {
-        if (client.getDebugOverlay().showDebugScreen())
-            return;
-        if (client.gui.hud.isHidden())
-            return;
+        //? if >=26 {
+        GuiGraphicsExtractor drawContext,
+        //?} else {
+        /*GuiGraphics drawContext,*/
+        //?}
+        DeltaTracker tickCounter
+    ) {
+        if (client.getDebugOverlay().showDebugScreen()) return;
+        //? if >=26.2 {
+        if (client.gui.hud.isHidden()) return;
+        //?} else {
+        /*if (client.options.hideGui) return;*/
+        //?}
 
         int x = horizontalMargin;
         int y = verticalMargin;
 
         for (CustomText text : topLeftText) {
             drawString(drawContext, text, x, y);
-
             y += scaledElementHeight(text) + lineHeight;
         }
 
@@ -99,11 +116,12 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
 
         y = verticalMargin;
         for (CustomText text : topRightText) {
-            int offset = (client.font.width(text.text) - 1) + (horizontalPadding * 2) + horizontalMargin;
-
+            int offset =
+                (client.font.width(text.text) - 1) +
+                (horizontalPadding * 2) +
+                horizontalMargin;
             x = client.getWindow().getGuiScaledWidth() - offset;
             drawString(drawContext, text, x, y);
-
             y += scaledElementHeight(text) + lineHeight;
         }
 
@@ -112,7 +130,6 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             int offset = scaledElementWidth(text) + horizontalMargin;
             x = client.getWindow().getGuiScaledWidth() - offset;
             y -= scaledElementHeight(text);
-
             drawString(drawContext, text, x, y);
             y -= lineHeight;
         }
@@ -121,8 +138,10 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
             float xPercent = text.customX / 100.0f;
             float yPercent = text.customY / 100.0f;
 
-            int maxX = client.getWindow().getGuiScaledWidth() - scaledElementWidth(text);
-            int maxY = client.getWindow().getGuiScaledHeight() - scaledElementHeight(text);
+            int maxX =
+                client.getWindow().getGuiScaledWidth() - scaledElementWidth(text);
+            int maxY =
+                client.getWindow().getGuiScaledHeight() - scaledElementHeight(text);
 
             int scaledX = (int) (xPercent * maxX);
             int scaledY = (int) (yPercent * maxY);
@@ -132,29 +151,57 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
     }
 
     private void drawString(
-            GuiGraphicsExtractor drawContext,
-            CustomText text,
-            int x,
-            int y) {
+        //? if >=26 {
+        GuiGraphicsExtractor drawContext,
+        //?} else {
+        /*GuiGraphics drawContext,*/
+        //?}
+        CustomText text,
+        int x,
+        int y
+    ) {
+        //? if >=1.21.6 {
         Matrix3x2fStack poses = drawContext.pose();
         poses.pushMatrix();
         poses.translate(x, y);
         poses.scale(text.scale, text.scale);
+        //?} else {
+        /*PoseStack poses = drawContext.pose();
+        poses.pushPose();
+        poses.translate(x, y, 0);
+        poses.scale(text.scale, text.scale, 1);*/
+        //?}
 
         int w = (client.font.width(text.text) - 1) + (horizontalPadding * 2);
         int h = (client.font.lineHeight - 1) + (verticalPadding * 2);
 
         drawContext.fill(0, 0, w, h, text.backgroundColor);
 
+        //? if >=26 {
         drawContext.text(
-                client.font,
-                text.text,
-                horizontalPadding,
-                verticalPadding,
-                text.color,
-                true);
+            client.font,
+            text.text,
+            horizontalPadding,
+            verticalPadding,
+            text.color,
+            true
+        );
+        //?} else {
+        /*drawContext.drawString(
+            client.font,
+            text.text,
+            horizontalPadding,
+            verticalPadding,
+            text.color,
+            true
+        );*/
+        //?}
 
+        //? if >=1.21.6 {
         poses.popMatrix();
+        //?} else {
+        /*poses.popPose();*/
+        //?}
     }
 
     private int scaledElementWidth(CustomText text) {
