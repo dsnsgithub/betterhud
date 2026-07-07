@@ -56,9 +56,10 @@ public class Setting {
 
     public static Setting createFloatSetting(float value, float min, float max) {
         return new Setting(
-                String.valueOf(value),
-                "float",
-                new String[] { String.valueOf(min), String.valueOf(max) });
+            String.valueOf(value),
+            "float",
+            new String[] { String.valueOf(min), String.valueOf(max) }
+        );
     }
 
     public String getType() {

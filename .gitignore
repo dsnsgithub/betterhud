@@ -32,6 +32,14 @@ bin/
 
 run/
 
+# stonecutter
+
+versions/*/.gradle/
+versions/*/build/
+versions/*/run/
+versions/*/src/
+*.stonecutter.tmp
+
 # java
 
 hs_err_*.log

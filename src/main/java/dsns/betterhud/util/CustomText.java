@@ -19,17 +19,19 @@ public class CustomText {
 
     public CustomText(String text, ModSettings settings) {
         this(
-                text,
-                settings.getSetting("Text Color").getColorValue(),
-                settings.getSetting("Scale").getFloatValue(),
-                settings.getSetting("Background Color").getColorValue());
+            text,
+            settings.getSetting("Text Color").getColorValue(),
+            settings.getSetting("Scale").getFloatValue(),
+            settings.getSetting("Background Color").getColorValue()
+        );
     }
 
     public CustomText(String text, int color, ModSettings settings) {
         this(
-                text,
-                color,
-                settings.getSetting("Scale").getFloatValue(),
-                settings.getSetting("Background Color").getColorValue());
+            text,
+            color,
+            settings.getSetting("Scale").getFloatValue(),
+            settings.getSetting("Background Color").getColorValue()
+        );
     }
 }
