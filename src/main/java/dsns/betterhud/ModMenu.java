@@ -5,8 +5,11 @@ import com.terraformersmc.modmenu.api.ModMenuApi;
 import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.ModSettings;
 import dsns.betterhud.util.Setting;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -19,6 +22,16 @@ import net.minecraft.network.chat.Component;
 public class ModMenu implements ModMenuApi {
 
     private static final Map<String, String> ORIENTATION_LABELS;
+    private static final List<String> STANDARD_KEYS = Arrays.asList(
+        "Enabled",
+        "Orientation",
+        "Custom Position",
+        "Custom X",
+        "Custom Y",
+        "Scale",
+        "Text Color",
+        "Background Color"
+    );
 
     static {
         ORIENTATION_LABELS = new LinkedHashMap<>();
@@ -81,6 +94,36 @@ public class ModMenu implements ModMenuApi {
             )
             .build();
         category.addEntry(enabledEntry);
+
+        SubCategoryBuilder optionsGroup = null;
+        for (Map.Entry<String, Setting> entry : settings
+            .getSettings()
+            .entrySet()) {
+            if (STANDARD_KEYS.contains(entry.getKey())) {
+                continue;
+            }
+            if (optionsGroup == null) {
+                optionsGroup = entryBuilder
+                    .startSubCategory(Component.literal("Options"))
+                    .setExpanded(true)
+                    .setTooltip(
+                        Component.literal(
+                            "Settings specific to the " + name + " module."
+                        )
+                    );
+            }
+            AbstractConfigListEntry<?> optionEntry = buildGenericEntry(
+                entryBuilder,
+                entry.getKey(),
+                entry.getValue()
+            );
+            if (optionEntry != null) {
+                optionsGroup.add(optionEntry);
+            }
+        }
+        if (optionsGroup != null) {
+            category.addEntry(optionsGroup.build());
+        }
 
         Setting customPosition = settings.getSetting("Custom Position");
         BooleanListEntry customPositionEntry = entryBuilder
@@ -255,6 +298,70 @@ public class ModMenu implements ModMenuApi {
         );
 
         category.addEntry(appearanceGroup.build());
+    }
+
+    private AbstractConfigListEntry<?> buildGenericEntry(
+        ConfigEntryBuilder entryBuilder,
+        String key,
+        Setting setting
+    ) {
+        Component label = Component.literal(key);
+        switch (setting.getType()) {
+            case "boolean":
+                return entryBuilder
+                    .startBooleanToggle(label, setting.getBooleanValue())
+                    .setDefaultValue(
+                        Boolean.parseBoolean(setting.getDefaultValue())
+                    )
+                    .setSaveConsumer(value ->
+                        setting.setValue(String.valueOf(value))
+                    )
+                    .build();
+            case "string":
+                return entryBuilder
+                    .startSelector(
+                        label,
+                        setting.getPossibleValues(),
+                        setting.getStringValue()
+                    )
+                    .setDefaultValue(setting.getDefaultValue())
+                    .setSaveConsumer(value -> setting.setValue(value))
+                    .build();
+            case "integer":
+                return entryBuilder
+                    .startIntField(label, setting.getIntValue())
+                    .setMin(parseBound(setting, 0, Integer.MIN_VALUE))
+                    .setMax(parseBound(setting, 1, Integer.MAX_VALUE))
+                    .setDefaultValue(
+                        Integer.parseInt(setting.getDefaultValue())
+                    )
+                    .setSaveConsumer(value ->
+                        setting.setValue(String.valueOf(value))
+                    )
+                    .build();
+            case "double":
+                return entryBuilder
+                    .startDoubleField(label, setting.getDoubleValue())
+                    .setDefaultValue(
+                        Double.parseDouble(setting.getDefaultValue())
+                    )
+                    .setSaveConsumer(value ->
+                        setting.setValue(String.valueOf(value))
+                    )
+                    .build();
+            case "color":
+                return entryBuilder
+                    .startAlphaColorField(label, setting.getColorValue())
+                    .setDefaultValue(
+                        Integer.parseInt(setting.getDefaultValue())
+                    )
+                    .setSaveConsumer(value ->
+                        setting.setValue(String.valueOf(value))
+                    )
+                    .build();
+            default:
+                return null;
+        }
     }
 
     private static String prettyOrientation(String raw) {
