@@ -1,7 +1,7 @@
 {
 	"required": true,
 	"package": "dsns.betterhud.mixin",
-	"compatibilityLevel": "${javaCompat}",
+	"compatibilityLevel": "${java}",
 	"client": [],
 	"injectors": {
 		"defaultRequire": 1
