@@ -142,7 +142,6 @@ jobs:
               return ok
                 ? `<td align="center"><b>${v}</b><br><a href="${base}/${file}"><img src="${base}/${file}" width="200" alt="BetterHUD on Minecraft ${v}"></a></td>`
                 : `<td align="center"><b>${v}</b><br>❌ no screenshot</td>`;
-              return `<td align="center"><b>${v}</b><br><a href="${base}/${file}"><img src="${base}/${file}" width="200" alt="BetterHUD on Minecraft ${v}"></a></td>`;
             });
             let rows = '';
             for (let i = 0; i < cells.length; i += 4) {
