@@ -47,33 +47,19 @@ if (!isLegacy) {
 	}
 }
 
-def modrinthCache = [:]
 def modrinthLatest = { String slug ->
-	modrinthCache.computeIfAbsent(slug) {
-		def query = "https://api.modrinth.com/v2/project/${slug}/version" +
-				"?game_versions=%5B%22${testMcVersion}%22%5D&loaders=%5B%22fabric%22%5D"
-		def found = new groovy.json.JsonSlurper().parse(new URI(query).toURL())
-		if (found.isEmpty()) {
-			throw new GradleException("No ${slug} release on Modrinth supports Minecraft ${testMcVersion}")
-		}
-		found.first().version_number
+	def query = "https://api.modrinth.com/v2/project/${slug}/version" +
+			"?game_versions=%5B%22${testMcVersion}%22%5D&loaders=%5B%22fabric%22%5D"
+	def found = new groovy.json.JsonSlurper().parse(new URI(query).toURL())
+	if (found.isEmpty()) {
+		throw new GradleException("No ${slug} release on Modrinth supports Minecraft ${testMcVersion}")
 	}
+	found.first().version_number
 }
 
-def modrinthVersions = [
-	'net.fabricmc.fabric-api:fabric-api'    : { modrinthLatest('fabric-api') },
-	'com.terraformersmc:modmenu'            : { modrinthLatest('modmenu') },
-	'me.shedaniel.cloth:cloth-config-fabric': { modrinthLatest('cloth-config').replace('+fabric', '') }
-]
-
-configurations.configureEach {
-	resolutionStrategy.eachDependency { details ->
-		def key = "${details.requested.group}:${details.requested.name}".toString()
-		if (details.requested.version == 'modrinth' && modrinthVersions.containsKey(key)) {
-			details.useVersion(modrinthVersions[key]())
-		}
-	}
-}
+def fabricApiVersion = modrinthLatest('fabric-api')
+def modmenuVersion = modrinthLatest('modmenu')
+def clothConfigVersion = modrinthLatest('cloth-config').replace('+fabric', '')
 
 dependencies {
 	minecraft "com.mojang:minecraft:${testMcVersion}"
@@ -81,15 +67,15 @@ dependencies {
 	if (isLegacy) {
 		mappings loom.officialMojangMappings()
 		modImplementation "net.fabricmc:fabric-loader:${loaderVersion}"
-		modImplementation 'net.fabricmc.fabric-api:fabric-api:modrinth'
+		modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
 	} else {
 		implementation "net.fabricmc:fabric-loader:${loaderVersion}"
-		implementation 'net.fabricmc.fabric-api:fabric-api:modrinth'
+		implementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
 	}
 
-	productionRuntimeMods('net.fabricmc.fabric-api:fabric-api:modrinth') { transitive = false }
-	productionRuntimeMods('com.terraformersmc:modmenu:modrinth') { transitive = false }
-	productionRuntimeMods('me.shedaniel.cloth:cloth-config-fabric:modrinth') { transitive = false }
+	productionRuntimeMods("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}") { transitive = false }
+	productionRuntimeMods("com.terraformersmc:modmenu:${modmenuVersion}") { transitive = false }
+	productionRuntimeMods("me.shedaniel.cloth:cloth-config-fabric:${clothConfigVersion}") { transitive = false }
 }
 
 tasks.withType(JavaCompile).configureEach {
