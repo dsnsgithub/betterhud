@@ -4,17 +4,11 @@ plugins {
 	id 'maven-publish'
 }
 
-def mcVersion = stonecutter.current.version
-def isLegacy = stonecutter.eval(mcVersion, '<26')
-def hasHudElementRegistry = stonecutter.eval(mcVersion, '>=1.21.6')
+def isLegacy = stonecutter.eval(stonecutter.current.version, '<26')
 
 apply plugin: isLegacy ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric-loom'
 
-def javaVersionInt = Integer.parseInt(project.java_version)
-def javaLang = JavaVersion.toVersion(javaVersionInt)
-def mixinJavaCompat = "JAVA_${javaVersionInt}"
-
-version = "${project.mod_version}+mc${mcVersion}"
+version = "${project.mod_version}+mc${stonecutter.current.version}"
 group = project.maven_group
 
 base {
@@ -66,8 +60,8 @@ processResources {
 		version       : project.version,
 		minecraftReq  : project.mc_dep,
 		loaderReq     : project.loader_dep,
-		javaReq       : ">=${javaVersionInt}",
-		javaCompat    : mixinJavaCompat,
+		javaReq       : ">=${project.java_version}",
+		javaCompat    : "JAVA_${project.java_version}",
 		dependsExtra  : dependsExtra
 	]
 	inputs.properties expansion
@@ -81,15 +75,15 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = javaVersionInt
+	it.options.release = Integer.parseInt(project.java_version)
 }
 
 java {
 	withSourcesJar()
-	sourceCompatibility = javaLang
-	targetCompatibility = javaLang
+	sourceCompatibility = JavaVersion.toVersion(Integer.parseInt(project.java_version))
+	targetCompatibility = JavaVersion.toVersion(Integer.parseInt(project.java_version))
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(javaVersionInt)
+		languageVersion = JavaLanguageVersion.of(Integer.parseInt(project.java_version))
 	}
 }
 
@@ -103,7 +97,7 @@ jar {
 publishing {
 	publications {
 		create('mavenJava', MavenPublication) {
-			artifactId = "${project.archives_base_name}-mc${mcVersion}"
+			artifactId = "${project.archives_base_name}-mc${stonecutter.current.version}"
 			from components.java
 		}
 	}
