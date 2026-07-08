@@ -20,10 +20,7 @@ bin/
 
 run/
 
-versions/*/.gradle/
-versions/*/build/
-versions/*/run/
-versions/*/src/
+versions/
 *.stonecutter.tmp
 
 hs_err_*.log
