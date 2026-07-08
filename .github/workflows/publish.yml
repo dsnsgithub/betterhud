@@ -130,7 +130,7 @@ jobs:
           curseforge-token: ${{ inputs.platforms != 'modrinth' && secrets.CURSEFORGE_TOKEN || '' }}
 
           files: versions/${{ matrix.mc }}/build/libs/!(*-@(dev|sources|javadoc)).jar
-          name: BetterHUD ${{ needs.matrices.outputs.mod_version }} (${{ matrix.range }})
+          name: BetterHUD ${{ needs.matrices.outputs.mod_version }} (Minecraft ${{ matrix.range }})
           version: ${{ needs.matrices.outputs.mod_version }}+mc${{ matrix.mc }}
           version-type: ${{ inputs.version_type }}
           changelog: ${{ inputs.changelog }}
