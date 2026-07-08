@@ -5,7 +5,8 @@
 # URLs) in a PR comment and in the job summary.
 #
 # Leaves the normalized screenshots in screenshots-publish/ for the comment
-# step: <sha>/mc-<version>-survival.png and <sha>/mc-<version>-title.png.
+# step: <sha>/mc-<version>-survival.png, <sha>/mc-<version>-settings.png and
+# <sha>/mc-<version>-title.png.
 #
 # Required env: GITHUB_TOKEN, GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_SHA
 set -euo pipefail
@@ -34,7 +35,7 @@ mkdir -p "$PUBLISH"
 
 for dir in shots/*/; do
 	mc="$(basename "$dir")"
-	for kind in survival-world title-screen; do
+	for kind in survival-world settings-menu title-screen; do
 		src="$(find "$dir" -name "*betterhud-$kind.png" -print -quit)"
 		if [ -n "$src" ]; then
 			cp "$src" "$PUBLISH/mc-$mc-${kind%%-*}.png"

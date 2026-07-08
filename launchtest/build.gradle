@@ -2,10 +2,10 @@
 //
 // Boots a REAL production Fabric client (fabric-loader + vanilla Minecraft +
 // the built betterhud jar + its runtime dependency mods) for ANY supported
-// Minecraft version, verifies the game reaches the title screen and a survival
-// singleplayer world with the HUD active, takes screenshots, and exits. Any
-// crash on the way fails the build. The Minecraft version to launch is chosen
-// with a Gradle property:
+// Minecraft version, verifies the game reaches the title screen, a survival
+// singleplayer world with the HUD active, and the BetterHUD settings menu,
+// takes screenshots, and exits. Any crash on the way fails the build. The
+// Minecraft version to launch is chosen with a Gradle property:
 //
 //   ./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=1.21.3
 //
@@ -89,16 +89,20 @@ if (entry.clientGametest) {
 dependencies {
 	minecraft "com.mojang:minecraft:${testMcVersion}"
 
+	// Mod Menu's API is compiled against so the test driver can open BetterHUD's
+	// settings screen through the mod's registered "modmenu" entrypoint.
 	if (isLegacy) {
 		mappings loom.officialMojangMappings()
 		modImplementation "net.fabricmc:fabric-loader:${loaderVersion}"
 		modImplementation "net.fabricmc.fabric-api:fabric-api:${entry.fabricApi}"
+		modCompileOnly "com.terraformersmc:modmenu:${entry.modmenu}"
 		if (entry.clientGametest) {
 			modImplementation fabricApi.module('fabric-client-gametest-api-v1', entry.fabricApi)
 		}
 	} else {
 		implementation "net.fabricmc:fabric-loader:${loaderVersion}"
 		implementation "net.fabricmc.fabric-api:fabric-api:${entry.fabricApi}"
+		compileOnly "com.terraformersmc:modmenu:${entry.modmenu}"
 		implementation fabricApi.module('fabric-client-gametest-api-v1', entry.fabricApi)
 	}
 
@@ -136,7 +140,8 @@ def ownJarTask = tasks.names.contains('remapJar') ? 'remapJar' : 'jar'
 
 // Launches a real production Fabric client and runs the launch test: reach the
 // title screen, enter a survival singleplayer world with the HUD rendering,
-// screenshot it (run/screenshots/), and shut down cleanly.
+// open the BetterHUD settings menu, screenshot both (run/screenshots/), and
+// shut down cleanly.
 tasks.register('runProductionClientGameTest', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
 	mods.setFrom(variantProject.tasks.named(variantJarTask), tasks.named(ownJarTask), configurations.productionRuntimeMods)
 

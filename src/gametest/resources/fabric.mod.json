@@ -11,6 +11,8 @@
 	},
 	"depends": {
 		"betterhud": "*",
-		"fabric-client-gametest-api-v1": "*"
+		"fabric-client-gametest-api-v1": "*",
+		"modmenu": "*",
+		"cloth-config2": "*"
 	}
 }

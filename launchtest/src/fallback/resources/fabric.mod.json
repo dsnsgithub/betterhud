@@ -3,7 +3,7 @@
 	"id": "betterhud-gametest",
 	"version": "1.0.0",
 	"name": "BetterHUD Launch Test",
-	"description": "Fallback launch test for BetterHUD on Minecraft versions without Fabric's client gametest module: screenshots the (pre-generated) survival world or the title screen, then exits.",
+	"description": "Fallback launch test for BetterHUD on Minecraft versions without Fabric's client gametest module: screenshots the (pre-generated) survival world and the BetterHUD settings menu, or the title screen, then exits.",
 	"license": "AGPL-3.0",
 	"environment": "client",
 	"entrypoints": {
@@ -11,6 +11,8 @@
 	},
 	"depends": {
 		"betterhud": "*",
-		"fabric-lifecycle-events-v1": "*"
+		"fabric-lifecycle-events-v1": "*",
+		"modmenu": "*",
+		"cloth-config2": "*"
 	}
 }

@@ -2,7 +2,8 @@
 # on EVERY supported Minecraft version concurrently: each launch job boots a
 # real production Fabric client under XVFB with the covering variant's jar and
 # version-matched runtime mods, enters a survival singleplayer world with the
-# HUD active, screenshots it, and fails if anything crashes on the way.
+# HUD active, opens the BetterHUD settings menu, screenshots both, and fails
+# if anything crashes on the way.
 # The screenshot report job embeds all screenshots in a PR comment (via the
 # ci-screenshots branch) and in the job summary, and the modrinth bundle job
 # packages the release jars with their per-jar Minecraft version lists.
@@ -111,8 +112,10 @@ jobs:
       - name: Launch Minecraft ${{ matrix.mc }} with Mod
         run: ./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=${{ matrix.mc }} --stacktrace
 
-      - name: Check Survival World Screenshot Was Taken
-        run: test -n "$(find launchtest/run/screenshots -name '*betterhud-survival-world.png' -print -quit 2>/dev/null)"
+      - name: Check Required Screenshots Were Taken
+        run: |
+          test -n "$(find launchtest/run/screenshots -name '*betterhud-survival-world.png' -print -quit 2>/dev/null)"
+          test -n "$(find launchtest/run/screenshots -name '*betterhud-settings-menu.png' -print -quit 2>/dev/null)"
 
       - name: Upload Screenshots
         # Consumed by the screenshot-report job below.
@@ -156,11 +159,13 @@ jobs:
             const base = `https://raw.githubusercontent.com/${context.repo.owner}/${context.repo.repo}/ci-screenshots/${context.sha}`;
 
             const cells = versions.map(v => {
-              const file = `mc-${v}-survival.png`;
-              const ok = fs.existsSync(`${dir}/${file}`);
-              return ok
-                ? `<td align="center"><b>${v}</b><br><a href="${base}/${file}"><img src="${base}/${file}" width="200" alt="BetterHUD on Minecraft ${v}"></a></td>`
-                : `<td align="center"><b>${v}</b><br>❌ no screenshot</td>`;
+              const shots = [
+                { file: `mc-${v}-survival.png`, label: 'Survival World' },
+                { file: `mc-${v}-settings.png`, label: 'Settings Menu' },
+              ].map(({ file, label }) => fs.existsSync(`${dir}/${file}`)
+                ? `<a href="${base}/${file}"><img src="${base}/${file}" width="200" alt="BetterHUD ${label} on Minecraft ${v}"></a><br><sub>${label}</sub>`
+                : `❌ no ${label.toLowerCase()} screenshot`);
+              return `<td align="center"><b>${v}</b><br>${shots.join('<br>')}</td>`;
             });
             let rows = '';
             for (let i = 0; i < cells.length; i += 4) {
@@ -171,7 +176,7 @@ jobs:
             const body = [
               marker,
               '### Client Launch Test',
-              `Automated launch verification for \`${context.sha.slice(0, 7)}\`: on every supported Minecraft version, the client launched successfully and entered a survival singleplayer world with the HUD active. A ❌ indicates that a version's launch test did not produce a screenshot — see that version's job for details. Title-screen screenshots and game logs are available in the workflow run artifacts.`,
+              `Automated launch verification for \`${context.sha.slice(0, 7)}\`: on every supported Minecraft version, the client launched successfully, entered a survival singleplayer world with the HUD active, and opened the BetterHUD settings menu. A ❌ indicates that a version's launch test did not produce the corresponding screenshot — see that version's job for details. Title-screen screenshots and game logs are available in the workflow run artifacts.`,
               '',
               `<table>\n${rows}</table>`,
             ].join('\n');

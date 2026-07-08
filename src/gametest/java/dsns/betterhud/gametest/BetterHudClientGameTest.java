@@ -5,9 +5,13 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -24,7 +28,32 @@ public class BetterHudClientGameTest implements FabricClientGameTest {
 			// Let the world tick a little with the HUD rendering before capturing evidence.
 			context.waitTicks(40);
 			assertScreenshotSaved(context.takeScreenshot("betterhud-survival-world"));
+
+			// Open the BetterHUD settings menu and capture it too, so the
+			// settings configuration can be validated per version.
+			context.runOnClient(client -> client.setScreen(createSettingsScreen(client)));
+			context.waitTicks(20);
+			assertScreenshotSaved(context.takeScreenshot("betterhud-settings-menu"));
+			context.runOnClient(client -> client.setScreen(null));
 		}
+	}
+
+	/**
+	 * Builds BetterHUD's settings screen the same way Mod Menu does: through the
+	 * config screen factory that the mod registers via its "modmenu" entrypoint.
+	 */
+	private static Screen createSettingsScreen(Minecraft client) {
+		ModMenuApi entrypoint = FabricLoader.getInstance()
+				.getEntrypointContainers("modmenu", ModMenuApi.class).stream()
+				.filter(container -> "betterhud".equals(container.getProvider().getMetadata().getId()))
+				.findFirst()
+				.orElseThrow(() -> new AssertionError("BetterHUD does not register a \"modmenu\" entrypoint"))
+				.getEntrypoint();
+		Screen screen = entrypoint.getModConfigScreenFactory().create(client.screen);
+		if (screen == null) {
+			throw new AssertionError("BetterHUD did not provide a settings screen (is Cloth Config loaded?)");
+		}
+		return screen;
 	}
 
 	private static void assertScreenshotSaved(Path screenshot) {

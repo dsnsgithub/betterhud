@@ -40,8 +40,9 @@ truth for every supported Minecraft version. It drives:
 - the Stonecutter variant list (`settings.gradle`),
 - the CI matrices — every push builds all variants and **launch-tests the mod
   on every supported version concurrently** (a real production client boots
-  under XVFB, enters a survival world with the HUD active, screenshots it,
-  and fails on any crash; the screenshots are posted as a grid on the PR),
+  under XVFB, enters a survival world with the HUD active, opens the BetterHUD
+  settings menu, screenshots both, and fails on any crash; the screenshots are
+  posted as a grid on the PR),
 - the per-version runtime mods used by those launch tests,
 - the Modrinth upload guide (see below).
 
