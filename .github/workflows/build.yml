@@ -3,9 +3,7 @@ on: push
 
 jobs:
   build:
-    name: Build Project
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
