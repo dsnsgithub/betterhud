@@ -10,7 +10,7 @@
 # Both job matrices are generated from supported-versions.json — add a version
 # there (see README) and every job picks it up.
 
-name: build
+name: Build
 on: push
 
 # contents: write lets the screenshot report push to the ci-screenshots branch,
@@ -21,21 +21,21 @@ permissions:
 
 jobs:
   matrices:
-    name: compute matrices
+    name: Compute Matrices
     runs-on: ubuntu-24.04
     outputs:
       build: ${{ steps.gen.outputs.build }}
       launch: ${{ steps.gen.outputs.launch }}
     steps:
-      - name: checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v6
 
-      - name: generate matrices from supported-versions.json
+      - name: Generate Matrices from supported-versions.json
         id: gen
         run: bash .github/scripts/generate-matrices.sh
 
   build:
-    name: build mc${{ matrix.mc }}
+    name: Build MC ${{ matrix.mc }}
     runs-on: ubuntu-24.04
     needs: matrices
     strategy:
@@ -43,25 +43,25 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.matrices.outputs.build) }}
     steps:
-      - name: checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v6
 
-      - name: validate gradle wrapper
+      - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v6
 
-      - name: setup jdk ${{ matrix.java }}
+      - name: Set Up JDK ${{ matrix.java }}
         uses: actions/setup-java@v5
         with:
           java-version: ${{ matrix.java }}
           distribution: 'microsoft'
 
-      - name: make gradle wrapper executable
+      - name: Make Gradle Wrapper Executable
         run: chmod +x ./gradlew
 
-      - name: build :${{ matrix.mc }}:build
+      - name: Build :${{ matrix.mc }}:build
         run: ./gradlew :${{ matrix.mc }}:build --stacktrace
 
-      - name: upload jar
+      - name: Upload Jar
         uses: actions/upload-artifact@v7
         with:
           name: betterhud-mc${{ matrix.mc }}
@@ -76,7 +76,7 @@ jobs:
   # that version's dedicated server, and the client auto-joins it instead of
   # creating one through the gametest API.
   launch-test:
-    name: launch mc${{ matrix.mc }}
+    name: Launch MC ${{ matrix.mc }}
     runs-on: ubuntu-24.04
     needs: matrices
     timeout-minutes: 40
@@ -85,36 +85,36 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.matrices.outputs.launch) }}
     steps:
-      - name: checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v6
 
-      - name: validate gradle wrapper
+      - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v6
 
-      - name: setup jdk ${{ matrix.java }}
+      - name: Set Up JDK ${{ matrix.java }}
         uses: actions/setup-java@v5
         with:
           java-version: ${{ matrix.java }}
           distribution: 'microsoft'
 
-      - name: make gradle wrapper executable
+      - name: Make Gradle Wrapper Executable
         run: chmod +x ./gradlew
 
-      - name: install xvfb
+      - name: Install Xvfb
         # Provides a virtual display so the Minecraft client can launch headlessly.
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
-      - name: generate singleplayer test world
+      - name: Generate Singleplayer Test World
         if: ${{ matrix.pregen_world }}
         run: bash .github/scripts/generate-test-world.sh ${{ matrix.mc }}
 
-      - name: launch minecraft ${{ matrix.mc }} with mod
+      - name: Launch Minecraft ${{ matrix.mc }} with Mod
         run: ./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=${{ matrix.mc }} --stacktrace
 
-      - name: check survival world screenshot was taken
+      - name: Check Survival World Screenshot Was Taken
         run: test -n "$(find launchtest/run/screenshots -name '*betterhud-survival-world.png' -print -quit 2>/dev/null)"
 
-      - name: upload screenshots
+      - name: Upload Screenshots
         # Consumed by the screenshot-report job below.
         if: always()
         uses: actions/upload-artifact@v7
@@ -123,7 +123,7 @@ jobs:
           path: launchtest/run/screenshots/
           if-no-files-found: ignore
 
-      - name: upload game logs
+      - name: Upload Game Logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
@@ -132,20 +132,20 @@ jobs:
           if-no-files-found: ignore
 
   screenshot-report:
-    name: screenshot report
+    name: Screenshot Report
     runs-on: ubuntu-24.04
     needs: launch-test
     if: ${{ always() }}
     steps:
-      - name: checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v6
 
-      - name: publish screenshots to the ci-screenshots branch
+      - name: Publish Screenshots to the ci-screenshots Branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash .github/scripts/publish-screenshots.sh
 
-      - name: post screenshot grid to pull request and job summary
+      - name: Post Screenshot Grid to Pull Request and Job Summary
         uses: actions/github-script@v8
         with:
           script: |
@@ -170,8 +170,8 @@ jobs:
             const marker = '<!-- betterhud-launch-screenshots -->';
             const body = [
               marker,
-              '### Client launch test',
-              `The game launched and entered a survival singleplayer world with the HUD active, on every supported Minecraft version, for \`${context.sha.slice(0, 7)}\`. A ❌ means that version's launch test did not produce a screenshot — check its job. Title-screen screenshots and game logs are in the run artifacts.`,
+              '### Client Launch Test',
+              `Automated launch verification for \`${context.sha.slice(0, 7)}\`: on every supported Minecraft version, the client launched successfully and entered a survival singleplayer world with the HUD active. A ❌ indicates that a version's launch test did not produce a screenshot — see that version's job for details. Title-screen screenshots and game logs are available in the workflow run artifacts.`,
               '',
               `<table>\n${rows}</table>`,
             ].join('\n');
@@ -212,16 +212,16 @@ jobs:
   # which lists exactly which Minecraft versions to select for each jar when
   # uploading to Modrinth. Download the "modrinth-upload" artifact and follow it.
   modrinth-bundle:
-    name: modrinth bundle
+    name: Modrinth Bundle
     runs-on: ubuntu-24.04
     steps:
-      - name: checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v6
 
-      - name: validate gradle wrapper
+      - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v6
 
-      - name: setup jdk 21 and 25
+      - name: Set Up JDK 21 and 25
         uses: actions/setup-java@v5
         with:
           java-version: |
@@ -229,13 +229,13 @@ jobs:
             25
           distribution: 'microsoft'
 
-      - name: make gradle wrapper executable
+      - name: Make Gradle Wrapper Executable
         run: chmod +x ./gradlew
 
-      - name: build all variants and write the upload guide
+      - name: Build All Variants and Write the Upload Guide
         run: ./gradlew modrinthBundle --stacktrace "-Porg.gradle.java.installations.paths=$JAVA_HOME_21_X64,$JAVA_HOME_25_X64"
 
-      - name: upload modrinth bundle
+      - name: Upload Modrinth Bundle
         uses: actions/upload-artifact@v7
         with:
           name: modrinth-upload
