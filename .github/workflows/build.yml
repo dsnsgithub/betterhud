@@ -170,7 +170,6 @@ jobs:
             const marker = '<!-- betterhud-launch-screenshots -->';
             const body = [
               marker,
-              '### Client launch test',
               `The game launched and entered a survival singleplayer world with the HUD active, on every supported Minecraft version, for \`${context.sha.slice(0, 7)}\`. A ❌ means that version's launch test did not produce a screenshot — check its job. Title-screen screenshots and game logs are in the run artifacts.`,
               '',
               `<table>\n${rows}</table>`,
