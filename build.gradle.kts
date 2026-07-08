@@ -34,6 +34,16 @@ repositories {
     maven("https://maven.terraformersmc.com/releases/")
 }
 
+fabricApi {
+    configureTests {
+        createSourceSet = false
+        modId = "betterhud-gametest"
+        enableGameTests = false
+        enableClientGameTests = true
+        eula = true
+    }
+}
+
 dependencies {
     /**
      * Fetches only the required Fabric API modules to not waste time downloading all of them for each version.
