@@ -138,6 +138,10 @@ jobs:
 
             const cells = versions.map(v => {
               const file = `mc-${v}-survival.png`;
+              const ok = fs.existsSync(`${dir}/${file}`);
+              return ok
+                ? `<td align="center"><b>${v}</b><br><a href="${base}/${file}"><img src="${base}/${file}" width="200" alt="BetterHUD on Minecraft ${v}"></a></td>`
+                : `<td align="center"><b>${v}</b><br>❌ no screenshot</td>`;
               return `<td align="center"><b>${v}</b><br><a href="${base}/${file}"><img src="${base}/${file}" width="200" alt="BetterHUD on Minecraft ${v}"></a></td>`;
             });
             let rows = '';
@@ -145,10 +149,8 @@ jobs:
               rows += `<tr>${cells.slice(i, i + 4).join('')}</tr>\n`;
             }
 
-            const marker = '<!-- betterhud-launch-screenshots -->';
             const body = [
-              marker,
-              `The game launched and entered a survival singleplayer world with the HUD active, for \`${context.sha.slice(0, 7)}\`. A missing version means its launch test did not produce a screenshot — check its job. Game logs are in the run artifacts.`,
+              `# BetterHUD Launch Screenshots`,
               '',
               `<table>\n${rows}</table>`,
             ].join('\n');
