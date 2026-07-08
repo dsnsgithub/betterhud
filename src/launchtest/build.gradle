@@ -1,0 +1,125 @@
+plugins {
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
+	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
+}
+
+def versionKey = { String v -> v.tokenize('.').collect { it.padLeft(4, '0') }.join('.') }
+def variantsDir = new File(rootDir, 'versions')
+def variants = variantsDir.listFiles().findAll { it.directory }*.name.sort { versionKey(it) }
+
+def variantProps = { String variant ->
+	def props = new Properties()
+	new File(variantsDir, "${variant}/gradle.properties").withInputStream { props.load(it) }
+	props
+}
+
+def testMcVersion = providers.gradleProperty('testMcVersion')
+	.getOrElse(variantProps(variants.last()).getProperty('minecraft_version'))
+
+def coveringVariants = variants.findAll { versionKey(it) <= versionKey(testMcVersion) }
+if (coveringVariants.isEmpty()) {
+	throw new GradleException("No build variant covers Minecraft ${testMcVersion}")
+}
+def variant = coveringVariants.last()
+
+def props = variantProps(variant)
+def loaderVersion = props.getProperty('loader_version')
+def javaVersionInt = Integer.parseInt(props.getProperty('java_version'))
+
+def isLegacy = variant.startsWith('1.')
+apply plugin: isLegacy ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric-loom'
+
+version = '1.0.0'
+base {
+	archivesName = 'betterhud-launchtest'
+}
+
+repositories {
+	maven { url 'https://maven.shedaniel.me/' }
+	maven { url 'https://maven.terraformersmc.com/releases/' }
+}
+
+if (!isLegacy) {
+	configurations.configureEach {
+		if (name.toLowerCase().contains('annotationprocessor')) {
+			exclude group: 'org.ow2.asm'
+		}
+	}
+}
+
+def modrinthCache = [:]
+def modrinthLatest = { String slug ->
+	modrinthCache.computeIfAbsent(slug) {
+		def query = "https://api.modrinth.com/v2/project/${slug}/version" +
+				"?game_versions=%5B%22${testMcVersion}%22%5D&loaders=%5B%22fabric%22%5D"
+		def found = new groovy.json.JsonSlurper().parse(new URI(query).toURL())
+		if (found.isEmpty()) {
+			throw new GradleException("No ${slug} release on Modrinth supports Minecraft ${testMcVersion}")
+		}
+		found.first().version_number
+	}
+}
+
+def modrinthVersions = [
+	'net.fabricmc.fabric-api:fabric-api'    : { modrinthLatest('fabric-api') },
+	'com.terraformersmc:modmenu'            : { modrinthLatest('modmenu') },
+	'me.shedaniel.cloth:cloth-config-fabric': { modrinthLatest('cloth-config').replace('+fabric', '') }
+]
+
+configurations.configureEach {
+	resolutionStrategy.eachDependency { details ->
+		def key = "${details.requested.group}:${details.requested.name}".toString()
+		if (details.requested.version == 'modrinth' && modrinthVersions.containsKey(key)) {
+			details.useVersion(modrinthVersions[key]())
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${testMcVersion}"
+
+	if (isLegacy) {
+		mappings loom.officialMojangMappings()
+		modImplementation "net.fabricmc:fabric-loader:${loaderVersion}"
+		modImplementation 'net.fabricmc.fabric-api:fabric-api:modrinth'
+	} else {
+		implementation "net.fabricmc:fabric-loader:${loaderVersion}"
+		implementation 'net.fabricmc.fabric-api:fabric-api:modrinth'
+	}
+
+	productionRuntimeMods('net.fabricmc.fabric-api:fabric-api:modrinth') { transitive = false }
+	productionRuntimeMods('com.terraformersmc:modmenu:modrinth') { transitive = false }
+	productionRuntimeMods('me.shedaniel.cloth:cloth-config-fabric:modrinth') { transitive = false }
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = javaVersionInt
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(javaVersionInt)
+	}
+}
+
+evaluationDependsOn(":${variant}")
+def variantProject = project(":${variant}")
+def variantJarTask = variantProject.tasks.names.contains('remapJar') ? 'remapJar' : 'jar'
+def ownJarTask = tasks.names.contains('remapJar') ? 'remapJar' : 'jar'
+
+tasks.register('runLaunchTest', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+	mods.setFrom(variantProject.tasks.named(variantJarTask), tasks.named(ownJarTask), configurations.productionRuntimeMods)
+	programArgs.addAll('--quickPlaySingleplayer', 'ci-world')
+
+	doFirst {
+		if (!file('run/saves/ci-world').exists()) {
+			throw new GradleException("Missing test world at src/launchtest/run/saves/ci-world. " +
+					"Generate it with: bash .github/scripts/generate-test-world.sh ${testMcVersion}")
+		}
+		def options = new File(runDir.get().asFile, 'options.txt')
+		if (!options.exists()) {
+			options.parentFile.mkdirs()
+			options.text = 'onboardAccessibility:false\n'
+		}
+	}
+}

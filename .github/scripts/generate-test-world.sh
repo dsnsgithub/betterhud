@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
-# Generates the vanilla singleplayer world save the launch test auto-joins
-# (launchtest/run/saves/ci-world) by briefly running the given Minecraft
-# version's dedicated server. Using the exact same version avoids any
-# world-upgrade prompts when the client opens it.
 set -euo pipefail
 
 MC_VERSION="${1:?usage: generate-test-world.sh <minecraft-version>}"
-DEST="$(pwd)/launchtest/run/saves/ci-world"
+DEST="$(pwd)/src/launchtest/run/saves/ci-world"
 
 WORK="$(mktemp -d)"
 cd "$WORK"
@@ -17,8 +13,6 @@ SERVER_URL="$(curl -sSf "$MANIFEST_URL" | jq -r '.downloads.server.url')"
 curl -sSfo server.jar "$SERVER_URL"
 
 echo "eula=true" > eula.txt
-# A flat world keeps generation fast and renders instantly on the CI software
-# renderer; the default gamemode (survival) shows the full HUD.
 cat > server.properties <<'EOF'
 level-name=ci-world
 level-type=minecraft\:flat

@@ -16,17 +16,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.renderer.GameRenderer;
 
-/**
- * Drives the launch test on every supported Minecraft version: the client is
- * started with {@code --quickPlaySingleplayer ci-world} (see the launchtest
- * Gradle project), joins the pre-generated survival world, screenshots it with
- * the HUD active, and exits cleanly. A crash anywhere on the way fails the run.
- */
 public class LaunchTestClient implements ClientModInitializer {
 	private static final String SCREENSHOT_NAME = "betterhud-survival-world.png";
-	// 200 ticks (10s) gives the software renderer on CI time to draw chunks;
-	// the screenshot is written asynchronously, so leave a few more seconds
-	// before renaming it and stopping the client.
+	private static final String[] MINECRAFT_RENDER_TARGET_GETTERS = {"getMainRenderTarget", "method_1522"};
+	private static final String GAME_RENDERER_RENDER_TARGET_GETTER = "mainRenderTarget";
 	private static final int SCREENSHOT_TICK = 200;
 	private static final int STOP_TICK = 300;
 	private static final int WORLD_JOIN_TIMEOUT_TICKS = 2400;
@@ -55,28 +48,21 @@ public class LaunchTestClient implements ClientModInitializer {
 		});
 	}
 
-	// Minecraft.getMainRenderTarget() moved to GameRenderer in MC 26.2, so no
-	// direct call compiles against every supported version. This mod only runs
-	// in production, where 26.x uses plain Mojang names and 1.21.x is remapped
-	// to version-stable intermediary names, so resolve the accessor under
-	// whichever name the running game has.
 	private static RenderTarget mainRenderTarget(Minecraft client) {
-		for (String name : new String[] {"getMainRenderTarget", "method_1522"}) {
+		for (String getter : MINECRAFT_RENDER_TARGET_GETTERS) {
 			try {
-				return (RenderTarget) Minecraft.class.getMethod(name).invoke(client);
+				return (RenderTarget) Minecraft.class.getMethod(getter).invoke(client);
 			} catch (ReflectiveOperationException e) {
-				// try the next name
+				continue;
 			}
 		}
 		try {
-			return (RenderTarget) GameRenderer.class.getMethod("mainRenderTarget").invoke(client.gameRenderer);
+			return (RenderTarget) GameRenderer.class.getMethod(GAME_RENDERER_RENDER_TARGET_GETTER).invoke(client.gameRenderer);
 		} catch (ReflectiveOperationException e) {
 			throw new IllegalStateException("Could not resolve the main render target", e);
 		}
 	}
 
-	// The Screenshot.grab overloads taking a file name differ across versions;
-	// only the auto-named one is stable, so rename its output afterwards.
 	private static void renameScreenshot(File gameDirectory) {
 		Path dir = gameDirectory.toPath().resolve("screenshots");
 		try (Stream<Path> files = Files.list(dir)) {

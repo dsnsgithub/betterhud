@@ -21,27 +21,17 @@ plugins {
 	id 'dev.kikugie.stonecutter' version '0.9.3'
 }
 
-// Every supported Minecraft version, and the build variant that covers it,
-// lives in supported-versions.json — the single source of truth also used by
-// the launch tests, the CI matrices, and the modrinthBundle task.
-def supportedVersions = new groovy.json.JsonSlurper().parse(file('supported-versions.json'))
-def variants = supportedVersions.values()*.variant.unique()
+def versionKey = { String v -> v.tokenize('.').collect { it.padLeft(4, '0') }.join('.') }
+def variants = file('versions').listFiles().findAll { it.directory }*.name.sort { versionKey(it) }
 
 stonecutter {
 	create(rootProject) {
-		// Each variant is one buildable subproject; the string is both the
-		// subproject name and the MC version it compiles against (see
-		// versions/<variant>/gradle.properties).
 		versions(*variants)
-
-		// vcsVersion is the variant whose form the sources are committed in
-		// (the "active" version when nothing else is selected).
 		vcsVersion = variants.last()
 	}
 }
 
 rootProject.name = 'betterhud'
 
-// Not a Stonecutter variant: launch-tests the built jar on any supported MC
-// version (-PtestMcVersion). Used by the CI launch-test matrix.
 include 'launchtest'
+project(':launchtest').projectDir = file('src/launchtest')
