@@ -5,7 +5,7 @@
 # URLs) in a PR comment and in the job summary.
 #
 # Leaves the normalized screenshots in screenshots-publish/ for the comment
-# step: <sha>/mc-<version>-survival.png and <sha>/mc-<version>-title.png.
+# step: <sha>/mc-<version>-survival.png.
 #
 # Required env: GITHUB_TOKEN, GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_SHA
 set -euo pipefail
@@ -28,18 +28,15 @@ while IFS=: read -r id name; do
 	unzip -oq "artifact-zips/$id.zip" -d "shots/$mc"
 done < <(jq -r '.artifacts[] | select(.name | startswith("launch-screenshots-mc")) | "\(.id):\(.name)"' artifacts.json)
 
-# --- Normalize names (gametest screenshots carry a timestamp prefix) --------
 PUBLISH="screenshots-publish/$GITHUB_SHA"
 mkdir -p "$PUBLISH"
 
 for dir in shots/*/; do
 	mc="$(basename "$dir")"
-	for kind in survival-world title-screen; do
-		src="$(find "$dir" -name "*betterhud-$kind.png" -print -quit)"
-		if [ -n "$src" ]; then
-			cp "$src" "$PUBLISH/mc-$mc-${kind%%-*}.png"
-		fi
-	done
+	src="$(find "$dir" -name "betterhud-survival-world.png" -print -quit)"
+	if [ -n "$src" ]; then
+		cp "$src" "$PUBLISH/mc-$mc-survival.png"
+	fi
 done
 
 count="$(find "$PUBLISH" -name '*.png' | wc -l)"

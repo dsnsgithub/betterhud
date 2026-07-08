@@ -1,14 +1,13 @@
 # Build the mod for every Stonecutter variant, then launch-test the built jars
 # on EVERY supported Minecraft version concurrently: each launch job boots a
 # real production Fabric client under XVFB with the covering variant's jar and
-# version-matched runtime mods, enters a survival singleplayer world with the
+# version-matched runtime mods, joins a pre-generated survival world with the
 # HUD active, screenshots it, and fails if anything crashes on the way.
 # The screenshot report job embeds all screenshots in a PR comment (via the
-# ci-screenshots branch) and in the job summary, and the modrinth bundle job
-# packages the release jars with their per-jar Minecraft version lists.
+# ci-screenshots branch) and in the job summary.
 #
-# Both job matrices are generated from supported-versions.json — add a version
-# there (see README) and every job picks it up.
+# All job matrices are generated from supported-versions.json — add a version
+# there (see DEVELOPMENT.md) and every job picks it up.
 
 name: build
 on: push
@@ -70,11 +69,6 @@ jobs:
   # One job per supported Minecraft version (not per build variant): the
   # 1.21 variant jar is launch-tested on 1.21-1.21.5, the 1.21.6 variant jar
   # on 1.21.6-1.21.11, and so on.
-  #
-  # pregen_world marks versions whose Fabric API has no client gametest module
-  # (before 1.21.4): for those a vanilla world save is generated first with
-  # that version's dedicated server, and the client auto-joins it instead of
-  # creating one through the gametest API.
   launch-test:
     name: launch mc${{ matrix.mc }}
     runs-on: ubuntu-24.04
@@ -105,11 +99,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: generate singleplayer test world
-        if: ${{ matrix.pregen_world }}
         run: bash .github/scripts/generate-test-world.sh ${{ matrix.mc }}
 
       - name: launch minecraft ${{ matrix.mc }} with mod
-        run: ./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=${{ matrix.mc }} --stacktrace
+        run: ./gradlew :launchtest:runLaunchTest -PtestMcVersion=${{ matrix.mc }} --stacktrace
 
       - name: check survival world screenshot was taken
         run: test -n "$(find launchtest/run/screenshots -name '*betterhud-survival-world.png' -print -quit 2>/dev/null)"
@@ -170,7 +163,7 @@ jobs:
             const marker = '<!-- betterhud-launch-screenshots -->';
             const body = [
               marker,
-              `The game launched and entered a survival singleplayer world with the HUD active, on every supported Minecraft version, for \`${context.sha.slice(0, 7)}\`. A ❌ means that version's launch test did not produce a screenshot — check its job. Title-screen screenshots and game logs are in the run artifacts.`,
+              `The game launched and entered a survival singleplayer world with the HUD active, on every supported Minecraft version, for \`${context.sha.slice(0, 7)}\`. A ❌ means that version's launch test did not produce a screenshot — check its job. Game logs are in the run artifacts.`,
               '',
               `<table>\n${rows}</table>`,
             ].join('\n');

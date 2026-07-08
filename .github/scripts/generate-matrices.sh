@@ -2,10 +2,8 @@
 # Derives the CI job matrices from supported-versions.json (the single source
 # of truth for supported Minecraft versions) and writes them to GITHUB_OUTPUT:
 #  - build:   one entry per build variant       -> { mc, java }
-#  - launch:  one entry per launchable version  -> { mc, java, pregen_world }
+#  - launch:  one entry per launchable version  -> { mc, java }
 #  - publish: one entry per build variant       -> { mc, java, game_versions, range }
-# pregen_world marks versions whose Fabric API has no client gametest module;
-# their launch test needs a pre-generated world (see generate-test-world.sh).
 # game_versions is the newline-separated list of Minecraft versions the
 # variant's jar covers (fed to mc-publish), range is its human-readable form
 # for the release name (e.g. "1.21-1.21.5").
@@ -18,12 +16,11 @@ java_for_variant() {
 }
 
 launch="[]"
-while IFS=$'\t' read -r mc variant gametest; do
+while IFS=$'\t' read -r mc variant; do
 	java="$(java_for_variant "$variant")"
-	pregen=$([ "$gametest" = "false" ] && echo true || echo false)
-	launch="$(jq -c --arg mc "$mc" --arg java "$java" --argjson pregen "$pregen" \
-		'. + [{mc: $mc, java: $java, pregen_world: $pregen}]' <<<"$launch")"
-done < <(jq -r 'to_entries[] | [.key, .value.variant, (.value.clientGametest | tostring)] | @tsv' "$JSON")
+	launch="$(jq -c --arg mc "$mc" --arg java "$java" \
+		'. + [{mc: $mc, java: $java}]' <<<"$launch")"
+done < <(jq -r 'to_entries[] | [.key, .value.variant] | @tsv' "$JSON")
 
 build="[]"
 publish="[]"

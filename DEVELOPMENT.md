@@ -16,14 +16,17 @@ Minecraft versions.
    - `fabricApi`, `modmenu`, `cloth`: the newest releases built for that
      Minecraft version (check each project's maven or Modrinth page — the
      launch test will catch runtime-incompatible picks).
-   - `clientGametest`: `true` (every version since 1.21.4 has the module).
 2. If a new variant is needed: create `versions/<variant>/gradle.properties`
    (copy the newest one and adjust the versions and `mc_dep` range), cap the
    previous variant's `mc_dep`, and add any `//?` Stonecutter guards the new
    Minecraft requires in the sources.
 
-To launch-test one version locally:
-`./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=<version>`
+To launch-test one version locally (generate the test world once per version):
+
+```
+bash .github/scripts/generate-test-world.sh <version>
+./gradlew :launchtest:runLaunchTest -PtestMcVersion=<version>
+```
 
 ### Releasing to Modrinth and CurseForge
 
