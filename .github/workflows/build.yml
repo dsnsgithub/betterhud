@@ -149,7 +149,9 @@ jobs:
               rows += `<tr>${cells.slice(i, i + 4).join('')}</tr>\n`;
             }
 
+            const marker = '<!-- betterhud-launch-screenshots -->';
             const body = [
+              marker,
               `# BetterHUD Launch Screenshots`,
               '',
               `<table>\n${rows}</table>`,
