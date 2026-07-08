@@ -4,7 +4,7 @@
 
 A simple HUD with essential information easily accessible for Minecraft Fabric. 
 
-[Cloth Config](https://modrinth.com/mod/cloth-config), [Mod Menu](https://modrinth.com/mod/modmenu), and [Fabric API](https://modrinth.com/mod/fabric-api) are also required.
+Requires [Cloth Config](https://modrinth.com/mod/cloth-config), [Mod Menu](https://modrinth.com/mod/modmenu), and [Fabric API](https://modrinth.com/mod/fabric-api).
 
 ![Picture of HUD](https://cdn.modrinth.com/data/cached_images/4dd33c9ed510e100af5cc442eb93092624856ba5.png)
 
@@ -43,7 +43,8 @@ truth for every supported Minecraft version. It drives:
   under XVFB, enters a survival world with the HUD active, screenshots it,
   and fails on any crash; the screenshots are posted as a grid on the PR),
 - the per-version runtime mods used by those launch tests,
-- the Modrinth upload guide (see below).
+- the publish workflow's per-jar Minecraft version lists and the manual
+  Modrinth upload guide (see below).
 
 ### Adding a new Minecraft version
 
@@ -64,9 +65,21 @@ truth for every supported Minecraft version. It drives:
 To launch-test one version locally:
 `./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=<version>`
 
-### Releasing to Modrinth
+### Releasing to Modrinth and CurseForge
 
-Run `./gradlew modrinthBundle` (or download the `modrinth-upload` artifact
-from any CI run). It produces `build/modrinth/` containing every release jar
-plus `UPLOAD.md`, which lists exactly which Minecraft versions to select for
-each jar when creating the Modrinth versions.
+Bump `mod_version` in `gradle.properties`, push, wait for CI to go green,
+then run the **publish** workflow from the Actions tab (Run workflow). It
+builds every variant and uploads each release jar as its own version on
+Modrinth and CurseForge, selecting exactly the Minecraft versions that jar
+covers (from `supported-versions.json`). The workflow asks for a changelog,
+a release channel (release/beta/alpha), and which platforms to publish to.
+
+It needs two repository secrets: `MODRINTH_TOKEN` (a
+[Modrinth PAT](https://modrinth.com/settings/pats) with the "Create versions"
+scope) and `CURSEFORGE_TOKEN` (a
+[CurseForge API token](https://legacy.curseforge.com/account/api-tokens)).
+
+For a manual upload instead, run `./gradlew modrinthBundle` (or download the
+`modrinth-upload` artifact from any CI run). It produces `build/modrinth/`
+containing every release jar plus `UPLOAD.md`, which lists exactly which
+Minecraft versions to select for each jar.
