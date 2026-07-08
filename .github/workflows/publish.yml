@@ -1,0 +1,147 @@
+# Publishes the mod to Modrinth and CurseForge on demand: bump `mod_version`
+# in gradle.properties, push, then run this workflow from the Actions tab.
+# It builds every Stonecutter variant and uploads each release jar as its own
+# version on both platforms, selecting exactly the Minecraft versions that jar
+# covers — driven by supported-versions.json, the same single source of truth
+# the build and launch-test matrices use.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#  - MODRINTH_TOKEN:   Modrinth PAT with the "Create versions" scope
+#                      (https://modrinth.com/settings/pats)
+#  - CURSEFORGE_TOKEN: CurseForge API token
+#                      (https://legacy.curseforge.com/account/api-tokens)
+#
+# This workflow only builds; correctness on every supported Minecraft version
+# is already covered by the launch tests that run on every push (build.yml),
+# so make sure the commit you release from is green there first.
+
+name: publish
+on:
+  workflow_dispatch:
+    inputs:
+      changelog:
+        description: 'Changelog (Markdown, shown on both platforms)'
+        required: true
+        type: string
+      version_type:
+        description: 'Release channel'
+        required: true
+        type: choice
+        default: release
+        options:
+          - release
+          - beta
+          - alpha
+      platforms:
+        description: 'Where to publish'
+        required: true
+        type: choice
+        default: both
+        options:
+          - both
+          - modrinth
+          - curseforge
+
+permissions:
+  contents: read
+
+# Never let two release runs interleave their uploads.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  matrices:
+    name: compute publish matrix
+    runs-on: ubuntu-24.04
+    outputs:
+      publish: ${{ steps.gen.outputs.publish }}
+      mod_version: ${{ steps.version.outputs.mod_version }}
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+
+      - name: generate matrices from supported-versions.json
+        id: gen
+        run: bash .github/scripts/generate-matrices.sh
+
+      - name: read mod version from gradle.properties
+        id: version
+        run: |
+          version="$(grep -oP '^mod_version=\K.+' gradle.properties)"
+          echo "mod_version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing BetterHUD $version"
+
+      - name: check the required tokens are configured
+        # mc-publish silently skips a platform whose token is empty, which
+        # would make a run "succeed" while publishing nothing — fail early
+        # instead if a selected platform has no token.
+        env:
+          PLATFORMS: ${{ inputs.platforms }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        run: |
+          if [ "$PLATFORMS" != "curseforge" ] && [ -z "$MODRINTH_TOKEN" ]; then
+            echo "::error::MODRINTH_TOKEN secret is not set"; exit 1
+          fi
+          if [ "$PLATFORMS" != "modrinth" ] && [ -z "$CURSEFORGE_TOKEN" ]; then
+            echo "::error::CURSEFORGE_TOKEN secret is not set"; exit 1
+          fi
+
+  publish:
+    name: publish mc${{ matrix.mc }}
+    runs-on: ubuntu-24.04
+    needs: matrices
+    strategy:
+      # Publish one variant at a time, oldest first (supported-versions.json
+      # order), so the newest-Minecraft version ends up as the most recently
+      # uploaded — and a failure stops before uploading the rest.
+      max-parallel: 1
+      fail-fast: true
+      matrix:
+        include: ${{ fromJson(needs.matrices.outputs.publish) }}
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: setup jdk ${{ matrix.java }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'microsoft'
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: build :${{ matrix.mc }}:build
+        run: ./gradlew :${{ matrix.mc }}:build --stacktrace
+
+      - name: publish to modrinth and curseforge
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          # An empty token makes mc-publish skip that platform, which is how
+          # the "platforms" input narrows the run to a single site.
+          modrinth-id: betterhudfabric
+          modrinth-token: ${{ inputs.platforms != 'curseforge' && secrets.MODRINTH_TOKEN || '' }}
+          curseforge-id: 1375095
+          curseforge-token: ${{ inputs.platforms != 'modrinth' && secrets.CURSEFORGE_TOKEN || '' }}
+
+          files: versions/${{ matrix.mc }}/build/libs/!(*-@(dev|sources|javadoc)).jar
+          name: BetterHUD ${{ needs.matrices.outputs.mod_version }} (${{ matrix.range }})
+          version: ${{ needs.matrices.outputs.mod_version }}+mc${{ matrix.mc }}
+          version-type: ${{ inputs.version_type }}
+          changelog: ${{ inputs.changelog }}
+
+          loaders: fabric
+          game-versions: ${{ matrix.game_versions }}
+          java: ${{ matrix.java }}
+          dependencies: |
+            fabric-api(required)
+            cloth-config(required)
+            modmenu(required)
+
+          retry-attempts: 2
+          retry-delay: 10000
