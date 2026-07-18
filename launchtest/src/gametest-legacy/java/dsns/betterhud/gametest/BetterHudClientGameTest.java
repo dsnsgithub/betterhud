@@ -1,10 +1,5 @@
 package dsns.betterhud.gametest;
 
-// Copy of /src/gametest/.../BetterHudClientGameTest.java for Minecraft
-// 1.21.4-1.21.11, whose fabric-client-gametest-api-v1 (4.x) names the client
-// world accessor getClientWorld() instead of getClientLevel() (5.x, 26.x).
-// Keep the two files in sync when changing the test.
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -26,7 +21,6 @@ public class BetterHudClientGameTest implements FabricClientGameTest {
 				.create()) {
 			singleplayer.getClientWorld().waitForChunksRender();
 
-			// Let the world tick a little with the HUD rendering before capturing evidence.
 			context.waitTicks(40);
 			assertScreenshotSaved(context.takeScreenshot("betterhud-survival-world"));
 		}

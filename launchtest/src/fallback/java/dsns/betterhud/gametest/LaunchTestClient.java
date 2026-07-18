@@ -6,28 +6,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.TitleScreen;
 
-/**
- * Fallback launch test driver for Minecraft versions whose Fabric API predates
- * the client gametest module (before 1.21.4).
- *
- * <p>When the run is started with {@code --quickPlaySingleplayer ci-world} and
- * {@code -Dbetterhud.launchtest.expectWorld=true} (see the launchtest Gradle
- * project), the game joins the pre-generated survival world; once it has ticked
- * long enough for chunks to render with the HUD active, this mod screenshots it
- * and schedules a clean shutdown, making the client exit with code 0. Without a
- * pre-generated world it screenshots the title screen and shuts down there
- * instead. A crash anywhere on the way fails the run.
- */
 public class LaunchTestClient implements ClientModInitializer {
 	private static final boolean EXPECT_WORLD = Boolean.getBoolean("betterhud.launchtest.expectWorld");
 
-	// 200 ticks (10s) gives the software renderer on CI time to draw chunks.
 	private static final int WORLD_SCREENSHOT_TICK = 200;
 	private static final int WORLD_STOP_TICK = 240;
 	private static final int TITLE_SCREENSHOT_TICK = 40;
 	private static final int TITLE_STOP_TICK = 80;
-	// 2400 ticks (2min) is plenty to join the pre-generated flat world; bail
-	// out with a failure instead of hanging until the CI job timeout.
 	private static final int WORLD_JOIN_TIMEOUT_TICKS = 2400;
 
 	private int totalTicks;

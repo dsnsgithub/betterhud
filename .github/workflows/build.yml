@@ -1,20 +1,6 @@
-# Build the mod for every Stonecutter variant, then launch-test the built jars
-# on EVERY supported Minecraft version concurrently: each launch job boots a
-# real production Fabric client under XVFB with the covering variant's jar and
-# version-matched runtime mods, enters a survival singleplayer world with the
-# HUD active, screenshots it, and fails if anything crashes on the way.
-# The screenshot report job embeds all screenshots in a PR comment (via the
-# ci-screenshots branch) and in the job summary, and the modrinth bundle job
-# packages the release jars with their per-jar Minecraft version lists.
-#
-# Both job matrices are generated from supported-versions.json — add a version
-# there (see README) and every job picks it up.
-
 name: build
 on: push
 
-# contents: write lets the screenshot report push to the ci-screenshots branch,
-# pull-requests: write lets it comment on the associated pull request.
 permissions:
   contents: write
   pull-requests: write
@@ -67,14 +53,6 @@ jobs:
           name: betterhud-mc${{ matrix.mc }}
           path: versions/${{ matrix.mc }}/build/libs/*.jar
 
-  # One job per supported Minecraft version (not per build variant): the
-  # 1.21 variant jar is launch-tested on 1.21-1.21.5, the 1.21.6 variant jar
-  # on 1.21.6-1.21.11, and so on.
-  #
-  # pregen_world marks versions whose Fabric API has no client gametest module
-  # (before 1.21.4): for those a vanilla world save is generated first with
-  # that version's dedicated server, and the client auto-joins it instead of
-  # creating one through the gametest API.
   launch-test:
     name: launch mc${{ matrix.mc }}
     runs-on: ubuntu-24.04
@@ -101,7 +79,6 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: install xvfb
-        # Provides a virtual display so the Minecraft client can launch headlessly.
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: generate singleplayer test world
@@ -115,7 +92,6 @@ jobs:
         run: test -n "$(find launchtest/run/screenshots -name '*betterhud-survival-world.png' -print -quit 2>/dev/null)"
 
       - name: upload screenshots
-        # Consumed by the screenshot-report job below.
         if: always()
         uses: actions/upload-artifact@v7
         with:
@@ -175,7 +151,6 @@ jobs:
               `<table>\n${rows}</table>`,
             ].join('\n');
 
-            // Always show the grid in the job summary, even without a PR.
             await core.summary.addRaw(body).write();
 
             const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
@@ -189,7 +164,6 @@ jobs:
               return;
             }
 
-            // Keep a single comment up to date instead of posting one per push.
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner, repo: context.repo.repo,
               issue_number: pr.number, per_page: 100,
@@ -207,9 +181,6 @@ jobs:
               });
             }
 
-  # Builds every variant and bundles the release jars together with UPLOAD.md,
-  # which lists exactly which Minecraft versions to select for each jar when
-  # uploading to Modrinth. Download the "modrinth-upload" artifact and follow it.
   modrinth-bundle:
     name: modrinth bundle
     runs-on: ubuntu-24.04

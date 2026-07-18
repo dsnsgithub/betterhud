@@ -1,43 +1,8 @@
-// Production client launch test harness.
-//
-// Boots a REAL production Fabric client (fabric-loader + vanilla Minecraft +
-// the built betterhud jar + its runtime dependency mods) for ANY supported
-// Minecraft version, verifies the game reaches the title screen and a survival
-// singleplayer world with the HUD active, takes screenshots, and exits. Any
-// crash on the way fails the build. The Minecraft version to launch is chosen
-// with a Gradle property:
-//
-//   ./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=1.21.3
-//
-// Loom's ClientProductionRunTask is hard-wired to the project's Minecraft
-// version, so this project applies Loom with `testMcVersion` as its Minecraft
-// version, then launches the jar built by the Stonecutter variant that covers
-// that version. On Linux CI (CI env var set) Loom runs the game under XVFB.
-//
-// The test driver mod compiled by this project comes in three flavours,
-// because Fabric's client gametest API only exists from 1.21.4:
-//  - 26.x:           /src/gametest (Mojang-style gametest API names, 5.x)
-//  - 1.21.4-1.21.11: src/gametest-legacy (same test, Yarn-style API names)
-//  - 1.21-1.21.3:    src/fallback (no gametest API: joins a pre-generated
-//                    world via --quickPlaySingleplayer, screenshots, exits;
-//                    see .github/scripts/generate-test-world.sh)
-
 plugins {
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
 	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
 }
 
-// ---------------------------------------------------------------------------
-// supported-versions.json (repo root) is the single source of truth for the
-// launchable Minecraft versions. Per version it pins:
-//  - variant:        the Stonecutter build variant whose jar covers it
-//  - fabricApi:      newest Fabric API built for exactly this version
-//  - modmenu:        newest Mod Menu whose fabric.mod.json accepts this version
-//  - cloth:          newest Cloth Config whose fabric.mod.json accepts this version
-//  - clientGametest: whether this Fabric API provides fabric-client-gametest-api-v1
-//                    (absent before 1.21.4; those versions use src/fallback)
-// All mod versions were verified against each jar's declared `depends` range.
-// ---------------------------------------------------------------------------
 def supportedVersions = new groovy.json.JsonSlurper().parse(new File(rootDir, 'supported-versions.json'))
 
 def testMcVersion = providers.gradleProperty('testMcVersion').getOrElse(supportedVersions.keySet().last())
@@ -46,15 +11,11 @@ if (entry == null) {
 	throw new GradleException("Unsupported testMcVersion '${testMcVersion}'. Supported versions: ${supportedVersions.keySet().join(', ')}")
 }
 
-// Reuse the covering variant's loader and Java versions so the launch matches
-// what that variant is built and shipped for.
 def variantProps = new Properties()
 file("../versions/${entry.variant}/gradle.properties").withInputStream { variantProps.load(it) }
 def loaderVersion = variantProps.getProperty('loader_version')
 def javaVersionInt = Integer.parseInt(variantProps.getProperty('java_version'))
 
-// Same plugin split as the variant builds: obfuscated 1.21.x needs the remap
-// plugin (intermediary production namespace), 26.x runs Mojang names natively.
 def isLegacy = entry.variant.startsWith('1.')
 apply plugin: isLegacy ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric-loom'
 
@@ -68,7 +29,6 @@ repositories {
 	maven { url 'https://maven.terraformersmc.com/releases/' }
 }
 
-// Matches the variant builds: MC 26+ rejects ASM coming from annotation processors.
 if (!isLegacy) {
 	configurations.configureEach {
 		if (name.toLowerCase().contains('annotationprocessor')) {
@@ -77,7 +37,6 @@ if (!isLegacy) {
 	}
 }
 
-// Pick the test driver source flavour for this Minecraft version (see header).
 if (entry.clientGametest) {
 	sourceSets.main.java.srcDirs = [isLegacy ? 'src/gametest-legacy/java' : "${rootDir}/src/gametest/java"]
 	sourceSets.main.resources.srcDirs = ["${rootDir}/src/gametest/resources"]
@@ -102,17 +61,11 @@ dependencies {
 		implementation fabricApi.module('fabric-client-gametest-api-v1', entry.fabricApi)
 	}
 
-	// Mods loaded alongside the built betterhud jar by the production run.
-	// These are production (intermediary/official) jars straight off the mod
-	// mavens; transitive deps are excluded because each fat jar already nests
-	// everything it needs via jar-in-jar.
 	productionRuntimeMods("net.fabricmc.fabric-api:fabric-api:${entry.fabricApi}") { transitive = false }
 	productionRuntimeMods("com.terraformersmc:modmenu:${entry.modmenu}") { transitive = false }
 	productionRuntimeMods("me.shedaniel.cloth:cloth-config-fabric:${entry.cloth}") { transitive = false }
 
 	if (entry.clientGametest) {
-		// Handles -Dfabric.client.gametest in the production client. Not part
-		// of the fabric-api fat jar, so it is loaded as its own mod.
 		productionRuntimeMods(fabricApi.module('fabric-client-gametest-api-v1', entry.fabricApi)) { transitive = false }
 	}
 }
@@ -129,35 +82,21 @@ java {
 
 evaluationDependsOn(":${entry.variant}")
 def variantProject = project(":${entry.variant}")
-// 1.21.x projects ship the intermediary-remapped jar; 26.x projects ship the
-// plain jar (no remapping for unobfuscated Minecraft).
 def variantJarTask = variantProject.tasks.names.contains('remapJar') ? 'remapJar' : 'jar'
 def ownJarTask = tasks.names.contains('remapJar') ? 'remapJar' : 'jar'
 
-// Launches a real production Fabric client and runs the launch test: reach the
-// title screen, enter a survival singleplayer world with the HUD rendering,
-// screenshot it (run/screenshots/), and shut down cleanly.
 tasks.register('runProductionClientGameTest', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
 	mods.setFrom(variantProject.tasks.named(variantJarTask), tasks.named(ownJarTask), configurations.productionRuntimeMods)
 
 	if (entry.clientGametest) {
-		// Fabric's client gametest runner drives the test and shuts the game
-		// down after the registered gametest (src/gametest) finishes.
 		jvmArgs.add('-Dfabric.client.gametest')
 		jvmArgs.add('-Dfabric.client.gametest.disableNetworkSynchronizer=true')
 	} else if (file('run/saves/ci-world').exists()) {
-		// No gametest API on this version: auto-join the pre-generated world;
-		// the fallback testmod screenshots it and stops the client. Without a
-		// pre-generated world the testmod stops at the title screen instead.
 		jvmArgs.add('-Dbetterhud.launchtest.expectWorld=true')
 		programArgs.addAll('--quickPlaySingleplayer', 'ci-world')
 	}
 
 	doFirst {
-		// On a fresh game dir Minecraft opens the accessibility onboarding
-		// screen instead of the title screen; disable it so the run always
-		// reaches the title screen. (The gametest module also forces this via
-		// mixin; the fallback testmod needs it done here.)
 		def options = new File(runDir.get().asFile, 'options.txt')
 		if (!options.exists()) {
 			options.parentFile.mkdirs()

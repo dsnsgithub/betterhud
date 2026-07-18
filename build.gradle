@@ -1,20 +1,15 @@
 plugins {
-	// Loom 1.14+ splits into two sibling plugins:
-	//  - `net.fabricmc.fabric-loom-remap` handles obfuscated MC (1.21.x with intermediary)
-	//  - `net.fabricmc.fabric-loom`       handles unobfuscated MC (26.1+, Mojang names native)
-	// We declare both with `apply false` and pick the right one for the current variant.
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
 	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
 	id 'maven-publish'
 }
 
 def mcVersion = stonecutter.current.version
-def isLegacy = stonecutter.eval(mcVersion, '<26')      // 1.21.x family
-def hasHudElementRegistry = stonecutter.eval(mcVersion, '>=1.21.6')  // 1.21.6+ and 26+
+def isLegacy = stonecutter.eval(mcVersion, '<26')
+def hasHudElementRegistry = stonecutter.eval(mcVersion, '>=1.21.6')
 
 apply plugin: isLegacy ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric-loom'
 
-// Per-MC Java version (21 for 1.21.x, 25 for 26.1+).
 def javaVersionInt = Integer.parseInt(project.java_version)
 def javaLang = JavaVersion.toVersion(javaVersionInt)
 def mixinJavaCompat = "JAVA_${javaVersionInt}"
@@ -31,8 +26,6 @@ repositories {
 	maven { url 'https://maven.terraformersmc.com/releases/' }
 }
 
-// MC 26+ uses fabric-rendering-v1's transitive deps but rejects ASM coming from
-// annotation processors.
 if (!isLegacy) {
 	configurations.configureEach {
 		if (name.toLowerCase().contains('annotationprocessor')) {
@@ -41,9 +34,6 @@ if (!isLegacy) {
 	}
 }
 
-// Every variant declares fabric-api, modmenu, and cloth-config as runtime deps
-// (not bundled). 1.21.x uses modImplementation for intermediary remapping; 26.x
-// uses plain implementation against unobfuscated MC.
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
@@ -118,6 +108,5 @@ publishing {
 		}
 	}
 	repositories {
-		// Add publish repos here if/when needed.
 	}
 }

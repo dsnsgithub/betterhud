@@ -1,13 +1,4 @@
 #!/usr/bin/env bash
-# Generates a vanilla singleplayer world save for the given Minecraft version
-# by briefly running that version's dedicated server, and places it where the
-# launch test expects it (launchtest/run/saves/ci-world).
-#
-# Only needed for versions whose Fabric API has no client gametest module
-# (before 1.21.4): their launch test cannot create a world in-game, so the
-# client auto-joins this save via --quickPlaySingleplayer instead. Using the
-# exact same Minecraft version to generate the world avoids any world-upgrade
-# prompts when the client opens it.
 set -euo pipefail
 
 MC_VERSION="${1:?usage: generate-test-world.sh <minecraft-version>}"
@@ -22,8 +13,6 @@ SERVER_URL="$(curl -sSf "$MANIFEST_URL" | jq -r '.downloads.server.url')"
 curl -sSfo server.jar "$SERVER_URL"
 
 echo "eula=true" > eula.txt
-# A flat world keeps generation fast and renders instantly on the CI software
-# renderer. The default gamemode (survival) matches the gametest-based runs.
 cat > server.properties <<'EOF'
 level-name=ci-world
 level-type=minecraft\:flat

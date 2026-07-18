@@ -1,14 +1,4 @@
 #!/usr/bin/env bash
-# Derives the CI job matrices from supported-versions.json (the single source
-# of truth for supported Minecraft versions) and writes them to GITHUB_OUTPUT:
-#  - build:   one entry per build variant       -> { mc, java }
-#  - launch:  one entry per launchable version  -> { mc, java, pregen_world }
-#  - publish: one entry per build variant       -> { mc, java, game_versions, range }
-# pregen_world marks versions whose Fabric API has no client gametest module;
-# their launch test needs a pre-generated world (see generate-test-world.sh).
-# game_versions is the newline-separated list of Minecraft versions the
-# variant's jar covers (fed to mc-publish), range is its human-readable form
-# for the release name (e.g. "1.21-1.21.5").
 set -euo pipefail
 
 JSON=supported-versions.json
