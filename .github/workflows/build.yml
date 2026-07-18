@@ -55,11 +55,17 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'microsoft'
 
+      - name: setup gradle with dependency caching
+        # Caches Gradle dependencies between runs (written on the default
+        # branch, read everywhere), so a flaky maven rarely has to be hit.
+        uses: gradle/actions/setup-gradle@v6
+
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
 
       - name: build :${{ matrix.mc }}:build
-        run: ./gradlew :${{ matrix.mc }}:build --stacktrace
+        # retry.sh reruns the build on transient failures (flaky maven downloads).
+        run: bash .github/scripts/retry.sh ./gradlew :${{ matrix.mc }}:build --stacktrace
 
       - name: upload jar
         uses: actions/upload-artifact@v7
@@ -97,6 +103,9 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'microsoft'
 
+      - name: setup gradle with dependency caching
+        uses: gradle/actions/setup-gradle@v6
+
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
 
@@ -109,7 +118,11 @@ jobs:
         run: bash .github/scripts/generate-test-world.sh ${{ matrix.mc }}
 
       - name: launch minecraft ${{ matrix.mc }} with mod
-        run: ./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=${{ matrix.mc }} --stacktrace
+        # Two attempts (not the default three): a real game crash fails both,
+        # and a second full launch still fits the 40-minute job timeout.
+        env:
+          RETRY_ATTEMPTS: '2'
+        run: bash .github/scripts/retry.sh ./gradlew :launchtest:runProductionClientGameTest -PtestMcVersion=${{ matrix.mc }} --stacktrace
 
       - name: check survival world screenshot was taken
         run: test -n "$(find launchtest/run/screenshots -name '*betterhud-survival-world.png' -print -quit 2>/dev/null)"
@@ -228,11 +241,14 @@ jobs:
             25
           distribution: 'microsoft'
 
+      - name: setup gradle with dependency caching
+        uses: gradle/actions/setup-gradle@v6
+
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
 
       - name: build all variants and write the upload guide
-        run: ./gradlew modrinthBundle --stacktrace "-Porg.gradle.java.installations.paths=$JAVA_HOME_21_X64,$JAVA_HOME_25_X64"
+        run: bash .github/scripts/retry.sh ./gradlew modrinthBundle --stacktrace "-Porg.gradle.java.installations.paths=$JAVA_HOME_21_X64,$JAVA_HOME_25_X64"
 
       - name: upload modrinth bundle
         uses: actions/upload-artifact@v7

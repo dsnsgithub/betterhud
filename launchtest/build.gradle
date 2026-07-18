@@ -68,6 +68,10 @@ repositories {
 	maven { url 'https://maven.terraformersmc.com/releases/' }
 }
 
+// Adds the Modrinth maven and modmenuDependency(), a fallback for when the
+// TerraformersMC maven is unreachable.
+apply from: "${rootDir}/gradle/modrinth-fallback.gradle"
+
 // Matches the variant builds: MC 26+ rejects ASM coming from annotation processors.
 if (!isLegacy) {
 	configurations.configureEach {
@@ -107,7 +111,7 @@ dependencies {
 	// mavens; transitive deps are excluded because each fat jar already nests
 	// everything it needs via jar-in-jar.
 	productionRuntimeMods("net.fabricmc.fabric-api:fabric-api:${entry.fabricApi}") { transitive = false }
-	productionRuntimeMods("com.terraformersmc:modmenu:${entry.modmenu}") { transitive = false }
+	productionRuntimeMods(modmenuDependency(entry.modmenu)) { transitive = false }
 	productionRuntimeMods("me.shedaniel.cloth:cloth-config-fabric:${entry.cloth}") { transitive = false }
 
 	if (entry.clientGametest) {

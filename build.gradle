@@ -31,6 +31,10 @@ repositories {
 	maven { url 'https://maven.terraformersmc.com/releases/' }
 }
 
+// Adds the Modrinth maven and modmenuDependency(), a fallback for when the
+// TerraformersMC maven is unreachable.
+apply from: "${rootDir}/gradle/modrinth-fallback.gradle"
+
 // MC 26+ uses fabric-rendering-v1's transitive deps but rejects ASM coming from
 // annotation processors.
 if (!isLegacy) {
@@ -52,14 +56,14 @@ dependencies {
 
 		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 		modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-		modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+		modImplementation modmenuDependency(project.modmenu_version)
 		modImplementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
 			exclude(group: 'net.fabricmc.fabric-api')
 		}
 	} else {
 		implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 		implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-		implementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+		implementation modmenuDependency(project.modmenu_version)
 		implementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
 			exclude(group: 'net.fabricmc.fabric-api')
 		}
