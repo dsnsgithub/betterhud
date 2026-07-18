@@ -21,7 +21,6 @@ public class BetterHudClientGameTest implements FabricClientGameTest {
 				.create()) {
 			singleplayer.getClientLevel().waitForChunksRender();
 
-			// Let the world tick a little with the HUD rendering before capturing evidence.
 			context.waitTicks(40);
 			assertScreenshotSaved(context.takeScreenshot("betterhud-survival-world"));
 		}

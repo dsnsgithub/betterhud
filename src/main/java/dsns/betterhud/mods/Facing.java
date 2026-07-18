@@ -35,17 +35,14 @@ public class Facing implements BaseMod {
     }
 
     public String formatSnakeCase(String biomeName) {
-        // Split the string by underscores
         String[] words = biomeName.split("_");
 
-        // Capitalize each word
         for (int i = 0; i < words.length; i++) {
             words[i] =
                 words[i].substring(0, 1).toUpperCase() +
                 words[i].substring(1).toLowerCase();
         }
 
-        // Join the words with spaces
         return String.join(" ", words);
     }
 }
