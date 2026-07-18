@@ -36,8 +36,8 @@ public class Biome implements BaseMod {
 
         if (player == null) return null;
 
-        // have to specify this because name of class is Biome
         //? if >=26 {
+        // must use long type because name of class is Biome
         Holder<net.minecraft.world.level.biome.Biome> biome = client.level.getBiome(player.blockPosition());
 
         if (!biome.unwrapKey().isPresent()) return null;
@@ -99,17 +99,14 @@ public class Biome implements BaseMod {
     }
 
     public String formatSnakeCase(String biomeName) {
-        // Split the string by underscores
         String[] words = biomeName.split("_");
 
-        // Capitalize each word
         for (int i = 0; i < words.length; i++) {
             words[i] =
                 words[i].substring(0, 1).toUpperCase() +
                 words[i].substring(1).toLowerCase();
         }
 
-        // Join the words with spaces
         return String.join(" ", words);
     }
 }

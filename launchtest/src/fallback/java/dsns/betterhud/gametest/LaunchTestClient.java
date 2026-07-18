@@ -21,13 +21,10 @@ import net.minecraft.client.gui.screens.TitleScreen;
 public class LaunchTestClient implements ClientModInitializer {
 	private static final boolean EXPECT_WORLD = Boolean.getBoolean("betterhud.launchtest.expectWorld");
 
-	// 200 ticks (10s) gives the software renderer on CI time to draw chunks.
 	private static final int WORLD_SCREENSHOT_TICK = 200;
 	private static final int WORLD_STOP_TICK = 240;
 	private static final int TITLE_SCREENSHOT_TICK = 40;
 	private static final int TITLE_STOP_TICK = 80;
-	// 2400 ticks (2min) is plenty to join the pre-generated flat world; bail
-	// out with a failure instead of hanging until the CI job timeout.
 	private static final int WORLD_JOIN_TIMEOUT_TICKS = 2400;
 
 	private int totalTicks;
