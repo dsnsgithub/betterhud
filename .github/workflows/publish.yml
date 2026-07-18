@@ -113,11 +113,16 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'microsoft'
 
+      - name: setup gradle with dependency caching
+        # Caches Gradle dependencies between runs; combined with retry.sh below
+        # this keeps transient maven download failures from killing a release.
+        uses: gradle/actions/setup-gradle@v6
+
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
 
       - name: build :${{ matrix.mc }}:build
-        run: ./gradlew :${{ matrix.mc }}:build --stacktrace
+        run: bash .github/scripts/retry.sh ./gradlew :${{ matrix.mc }}:build --stacktrace
 
       - name: publish to modrinth and curseforge
         uses: Kir-Antipov/mc-publish@v3.3

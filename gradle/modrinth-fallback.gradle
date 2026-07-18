@@ -1,0 +1,41 @@
+// Fallback for the TerraformersMC maven, which intermittently fails downloads
+// in CI ("Premature end of chunk coded message body"). The Modrinth maven
+// serves the exact same Mod Menu release jars under maven.modrinth coordinates
+// with identical version strings, so when the TerraformersMC coordinate cannot
+// be resolved the build switches to the Modrinth mirror instead of failing.
+//
+// Apply after the project's own repositories block, then declare Mod Menu via
+// modmenuDependency("<version>").
+
+repositories {
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = 'Modrinth'
+				url = 'https://api.modrinth.com/maven'
+			}
+		}
+		// Only maven.modrinth artifacts come from here, and nowhere else — the
+		// other repositories are never queried for the fallback coordinates.
+		filter {
+			includeGroup 'maven.modrinth'
+		}
+	}
+}
+
+ext.modmenuDependency = { String version ->
+	def primary = "com.terraformersmc:modmenu:${version}"
+	try {
+		// Probe the primary coordinate with a detached configuration. Release
+		// versions are cached forever, so once downloaded (or restored from the
+		// CI Gradle cache) this touches no network at all.
+		def probe = configurations.detachedConfiguration(dependencies.create(primary))
+		probe.transitive = false
+		probe.resolve()
+		return primary
+	} catch (Exception e) {
+		logger.warn("Could not resolve ${primary} from the TerraformersMC maven " +
+			"(${e.message}); falling back to maven.modrinth:modmenu:${version}")
+		return "maven.modrinth:modmenu:${version}"
+	}
+}
