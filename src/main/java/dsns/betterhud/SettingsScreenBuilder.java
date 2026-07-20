@@ -20,12 +20,10 @@ import net.minecraft.network.chat.Component;
  */
 public final class SettingsScreenBuilder {
 
-    // Placement is edited by dragging in the HUD editor, so these settings
-    // stay out of the settings screen. They remain in the config file as the
-    // persistence format the editor writes.
+    // The raw coordinates are edited by dragging in the HUD editor and stay
+    // out of the settings screen; the Position dropdown stays visible so an
+    // element can be reset to a corner from here.
     private static final Set<String> EDITOR_MANAGED_SETTINGS = Set.of(
-        "Orientation",
-        "Custom Position",
         "Custom X",
         "Custom Y"
     );

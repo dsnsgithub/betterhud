@@ -49,10 +49,10 @@ public final class HudLayout {
     }
 
     /**
-     * Computes the on-screen position of every element. Elements without a
-     * custom position stack downwards (or upwards) from their corner in list
-     * order; custom-positioned elements map their 0-100% coordinates onto the
-     * space the element can occupy without leaving the screen.
+     * Computes the on-screen position of every element. Corner-docked
+     * elements stack downwards (or upwards) from their corner in list order;
+     * custom-positioned elements map their 0-100% coordinates onto the space
+     * the element can occupy without leaving the screen.
      */
     public static List<Placed> layout(Minecraft client, List<CustomText> texts) {
         List<Placed> placed = new ObjectArrayList<>();
@@ -69,7 +69,7 @@ public final class HudLayout {
             int width = elementWidth(client, text);
             int height = elementHeight(client, text);
 
-            if (text.customPosition) {
+            if (text.position.equals("custom")) {
                 int maxX = screenWidth - width;
                 int maxY = screenHeight - height;
 
@@ -77,16 +77,16 @@ public final class HudLayout {
                 int y = (int) (text.customY / 100.0f * maxY);
 
                 placed.add(new Placed(text, x, y, width, height));
-            } else if (text.orientation.equals("top-left")) {
+            } else if (text.position.equals("top-left")) {
                 placed.add(
                     new Placed(text, HORIZONTAL_MARGIN, topLeftY, width, height)
                 );
                 topLeftY += height + LINE_HEIGHT;
-            } else if (text.orientation.equals("top-right")) {
+            } else if (text.position.equals("top-right")) {
                 int x = screenWidth - width - HORIZONTAL_MARGIN;
                 placed.add(new Placed(text, x, topRightY, width, height));
                 topRightY += height + LINE_HEIGHT;
-            } else if (text.orientation.equals("bottom-left")) {
+            } else if (text.position.equals("bottom-left")) {
                 bottomLeftY -= height;
                 placed.add(
                     new Placed(
@@ -98,7 +98,7 @@ public final class HudLayout {
                     )
                 );
                 bottomLeftY -= LINE_HEIGHT;
-            } else if (text.orientation.equals("bottom-right")) {
+            } else if (text.position.equals("bottom-right")) {
                 int x = screenWidth - width - HORIZONTAL_MARGIN;
                 bottomRightY -= height;
                 placed.add(new Placed(text, x, bottomRightY, width, height));

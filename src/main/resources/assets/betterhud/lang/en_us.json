@@ -5,6 +5,6 @@
 	"betterhud.editor.title": "BetterHUD Editor",
 	"betterhud.editor.settings": "Settings",
 	"betterhud.editor.scale": "Scale: %s×",
-	"betterhud.editor.hint": "Drag an element to move it · Scroll to resize · Right-click to dock it to a corner",
+	"betterhud.editor.hint": "Drag an element to move it · Drop it near a corner to dock it · Scroll to resize",
 	"betterhud.editor.hint2": "Press Escape to save and close"
 }

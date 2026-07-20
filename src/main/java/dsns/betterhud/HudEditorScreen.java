@@ -5,9 +5,7 @@ import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.HudLayout;
 import dsns.betterhud.util.HudRenderer;
 import dsns.betterhud.util.ModSettings;
-import dsns.betterhud.util.Setting;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,19 +29,23 @@ import org.joml.Matrix3x2fStack;
 
 /**
  * A Lunar Client style HUD editor: every enabled element is shown live and
- * can be dragged anywhere on the screen, resized with the scroll wheel, and
- * snapped back to its corner stack with a right click. Closing the screen
- * (Escape) saves the layout to the config file.
+ * can be dragged anywhere on the screen, docked into a corner stack by
+ * dropping it there, and resized with the scroll wheel. Elements can never
+ * overlap. Closing the screen (Escape) saves the layout to the config file.
  */
 public class HudEditorScreen extends Screen {
 
     private static final int SNAP_DISTANCE = 5;
 
-    private static final String[] CORNER_CYCLE = {
+    // Dragging this close to a corner's dock anchor (the spot a docked
+    // element occupies, margin included) docks the element there.
+    private static final int DOCK_SNAP_DISTANCE = 10;
+
+    private static final String[] CORNERS = {
         "top-left",
         "top-right",
-        "bottom-right",
         "bottom-left",
+        "bottom-right",
     };
 
     private static final int BACKDROP_COLOR = 0x50000000;
@@ -179,33 +181,12 @@ public class HudEditorScreen extends Screen {
             return true;
         }
 
+        if (button != 0) return false;
+
         HudLayout.Placed placed = elementAt(mouseX, mouseY);
         if (placed == null) return false;
 
-        BaseMod mod = owners.get(placed.text);
-
-        if (button == 1) {
-            // Right click: dock the element. A custom-positioned element goes
-            // back to its corner stack; a docked one cycles to the next corner.
-            ModSettings settings = mod.getModSettings();
-            Setting customPosition = settings.getSetting("Custom Position");
-            if (customPosition.getBooleanValue()) {
-                customPosition.setValue("false");
-            } else {
-                Setting orientation = settings.getSetting("Orientation");
-                int index = Arrays.asList(CORNER_CYCLE).indexOf(
-                    orientation.getStringValue()
-                );
-                orientation.setValue(
-                    CORNER_CYCLE[(index + 1) % CORNER_CYCLE.length]
-                );
-            }
-            return true;
-        }
-
-        if (button != 0) return false;
-
-        draggedMod = mod;
+        draggedMod = owners.get(placed.text);
         grabOffsetX = mouseX - placed.x;
         grabOffsetY = mouseY - placed.y;
         return true;
@@ -228,6 +209,16 @@ public class HudEditorScreen extends Screen {
 
         snappedCenterX = false;
         snappedCenterY = false;
+
+        ModSettings settings = draggedMod.getModSettings();
+
+        // Near a corner the element docks into that corner's stack; the
+        // layout then slots it in with the usual margin and stacking.
+        String dockCorner = dockCornerAt(x, y, maxX, maxY);
+        if (dockCorner != null) {
+            settings.getSetting("Position").setValue(dockCorner);
+            return true;
+        }
 
         // Snap to the screen edges and the screen center lines.
         double centerX = maxX / 2.0;
@@ -252,11 +243,18 @@ public class HudEditorScreen extends Screen {
         x = Math.clamp(x, 0, Math.max(maxX, 0));
         y = Math.clamp(y, 0, Math.max(maxY, 0));
 
+        // Elements may never cover each other: an overlapping spot is
+        // rejected and the element stays where it last fit.
+        if (overlapsOtherElement(x, y, elementWidth, elementHeight)) {
+            snappedCenterX = false;
+            snappedCenterY = false;
+            return true;
+        }
+
         double percentX = maxX <= 0 ? 0 : x * 100.0 / maxX;
         double percentY = maxY <= 0 ? 0 : y * 100.0 / maxY;
 
-        ModSettings settings = draggedMod.getModSettings();
-        settings.getSetting("Custom Position").setValue("true");
+        settings.getSetting("Position").setValue("custom");
         settings
             .getSetting("Custom X")
             .setValue(String.valueOf(Math.round(percentX * 100.0) / 100.0));
@@ -264,6 +262,43 @@ public class HudEditorScreen extends Screen {
             .getSetting("Custom Y")
             .setValue(String.valueOf(Math.round(percentY * 100.0) / 100.0));
         return true;
+    }
+
+    /** The corner whose dock anchor is within snapping range, or null. */
+    private String dockCornerAt(double x, double y, int maxX, int maxY) {
+        for (String corner : CORNERS) {
+            boolean left = corner.endsWith("-left");
+            boolean top = corner.startsWith("top");
+            double anchorX = left
+                ? HudLayout.HORIZONTAL_MARGIN
+                : maxX - HudLayout.HORIZONTAL_MARGIN;
+            double anchorY = top
+                ? HudLayout.VERTICAL_MARGIN
+                : maxY - HudLayout.VERTICAL_MARGIN;
+            if (
+                Math.abs(x - anchorX) <= DOCK_SNAP_DISTANCE &&
+                Math.abs(y - anchorY) <= DOCK_SNAP_DISTANCE
+            ) return corner;
+        }
+        return null;
+    }
+
+    private boolean overlapsOtherElement(
+        double x,
+        double y,
+        int width,
+        int height
+    ) {
+        for (HudLayout.Placed placed : placedElements) {
+            if (owners.get(placed.text) == draggedMod) continue;
+            if (
+                x < placed.x + placed.width &&
+                x + width > placed.x &&
+                y < placed.y + placed.height &&
+                y + height > placed.y
+            ) return true;
+        }
+        return false;
     }
 
     private boolean handleMouseUp() {
@@ -329,12 +364,44 @@ public class HudEditorScreen extends Screen {
         if (placed == null || scrollY == 0) return false;
 
         ModSettings settings = owners.get(placed.text).getModSettings();
-        float scale = settings.getSetting("Scale").getFloatValue();
-        scale += scrollY > 0 ? 0.1f : -0.1f;
+        float oldScale = settings.getSetting("Scale").getFloatValue();
+        float scale = oldScale + (scrollY > 0 ? 0.1f : -0.1f);
         scale = Math.round(scale * 10.0f) / 10.0f;
         scale = Math.clamp(scale, 0.1f, 10.0f);
+
+        // Growing may not push the element into a neighbour; shrinking is
+        // always allowed so elements can never get stuck.
+        if (scale > oldScale && resizeWouldOverlap(placed.text, scale)) {
+            return true;
+        }
+
         settings.getSetting("Scale").setValue(String.valueOf(scale));
         return true;
+    }
+
+    private boolean resizeWouldOverlap(CustomText subject, float newScale) {
+        Minecraft client = Minecraft.getInstance();
+        float oldScale = subject.scale;
+        subject.scale = newScale;
+        List<HudLayout.Placed> trial = HudLayout.layout(client, texts);
+        subject.scale = oldScale;
+
+        HudLayout.Placed resized = null;
+        for (HudLayout.Placed placed : trial) {
+            if (placed.text == subject) resized = placed;
+        }
+        if (resized == null) return false;
+
+        for (HudLayout.Placed placed : trial) {
+            if (placed.text == subject) continue;
+            if (
+                resized.x < placed.x + placed.width &&
+                resized.x + resized.width > placed.x &&
+                resized.y < placed.y + placed.height &&
+                resized.y + resized.height > placed.y
+            ) return true;
+        }
+        return false;
     }
 
     //? if >=26 {

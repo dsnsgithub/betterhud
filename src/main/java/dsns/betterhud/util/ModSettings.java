@@ -4,25 +4,27 @@ import java.util.LinkedHashMap;
 
 public class ModSettings {
 
+    public static final String[] POSITIONS = {
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+        "custom",
+    };
+
     private LinkedHashMap<String, Setting> settings = new LinkedHashMap<>();
 
     public ModSettings() {
         settings.put("Enabled", Setting.createBooleanSetting(true));
 
+        // A corner docks the element into that corner's stack; "custom" places
+        // it at Custom X/Y. Set by dragging in the HUD editor, or from the
+        // settings screen to reset an element back to a corner.
         settings.put(
-            "Orientation",
-            Setting.createStringSetting(
-                "top-left",
-                new String[] {
-                    "top-left",
-                    "top-right",
-                    "bottom-left",
-                    "bottom-right",
-                }
-            )
+            "Position",
+            Setting.createStringSetting("top-left", POSITIONS)
         );
 
-        settings.put("Custom Position", Setting.createBooleanSetting(false));
         // Percentages (0-100) of the space the element can occupy without
         // leaving the screen. Doubles so dragging in the HUD editor is smooth;
         // old integer config values still parse.
@@ -36,19 +38,11 @@ public class ModSettings {
         );
     }
 
-    public ModSettings(String orientation) {
+    public ModSettings(String position) {
         this();
         settings.replace(
-            "Orientation",
-            Setting.createStringSetting(
-                orientation,
-                new String[] {
-                    "top-left",
-                    "top-right",
-                    "bottom-left",
-                    "bottom-right",
-                }
-            )
+            "Position",
+            Setting.createStringSetting(position, POSITIONS)
         );
     }
 

@@ -28,11 +28,11 @@ or open BetterHUD from **Mod Menu**, to arrange the HUD visually instead of
 typing numbers:
 
 - **Drag** an element to place it anywhere on the screen (it snaps to the
-  screen edges and center lines).
+  screen edges and center lines, and never overlaps another element).
+- **Drop** an element near a corner to dock it into that corner's stack.
 - **Scroll** while hovering an element to resize it.
-- **Right-click** an element to dock it back into a corner; right-click a
-  docked element to cycle it through the corners.
-- **Settings…** opens the settings screen (colors, toggles, scale).
+- **Settings** opens the settings screen (colors, toggles, scale, and a
+  Position dropdown to reset an element back to a corner).
 - **Escape** saves the layout and closes the editor.
 
 ## Configuration (requires Cloth Config)

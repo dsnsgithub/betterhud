@@ -69,7 +69,7 @@ public class BetterHudClientGameTest implements FabricClientGameTest {
 		context.waitTicks(2);
 
 		Properties config = loadConfig();
-		if (!"true".equals(config.getProperty("FPS.Custom Position"))) {
+		if (!"custom".equals(config.getProperty("FPS.Position"))) {
 			throw new AssertionError(
 					"Dragging in the HUD editor did not give the FPS element a custom position: " + config);
 		}
@@ -80,20 +80,25 @@ public class BetterHudClientGameTest implements FabricClientGameTest {
 					"Dragging in the HUD editor did not move the FPS element: x=" + customX + "% y=" + customY + "%");
 		}
 
-		// Reopen the editor and dock the element back into its corner stack
-		// with a right click.
+		// Reopen the editor and drag the element back into the top-left
+		// corner, which docks it into that corner's stack.
 		input.pressKey(GLFW.GLFW_KEY_RIGHT_SHIFT);
 		context.waitTicks(5);
 		input.setCursorPos(92.0 * guiScale, 58.0 * guiScale);
-		input.pressMouse(GLFW.GLFW_MOUSE_BUTTON_RIGHT);
+		input.holdMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+		for (int i = 0; i < 10; i++) {
+			input.moveCursor(-8.0 * guiScale, -5.0 * guiScale);
+			context.waitTick();
+		}
+		input.releaseMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
 		context.waitTicks(2);
 		input.pressKey(GLFW.GLFW_KEY_ESCAPE);
 		context.waitTicks(2);
 
 		config = loadConfig();
-		if (!"false".equals(config.getProperty("FPS.Custom Position"))) {
+		if (!"top-left".equals(config.getProperty("FPS.Position"))) {
 			throw new AssertionError(
-					"Right-clicking in the HUD editor did not dock the FPS element back: " + config);
+					"Dragging into the corner did not dock the FPS element back: " + config);
 		}
 	}
 

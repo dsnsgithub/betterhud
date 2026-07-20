@@ -5,8 +5,7 @@ public class CustomText {
     public String text;
     public int color; // colors are in ARGB format
     public int backgroundColor; // colors are in ARGB format
-    public String orientation = "top-left";
-    public boolean customPosition = false;
+    public String position = "top-left"; // a corner, or "custom"
     public float scale = 1.0f;
     public float customX = 0;
     public float customY = 0;
@@ -37,10 +36,7 @@ public class CustomText {
     }
 
     public void applyPlacement(ModSettings settings) {
-        this.orientation = settings.getSetting("Orientation").getStringValue();
-        this.customPosition = settings
-            .getSetting("Custom Position")
-            .getBooleanValue();
+        this.position = settings.getSetting("Position").getStringValue();
         this.customX = settings.getSetting("Custom X").getFloatValue();
         this.customY = settings.getSetting("Custom Y").getFloatValue();
         this.scale = settings.getSetting("Scale").getFloatValue();
