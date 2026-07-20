@@ -24,7 +24,6 @@ public class ModMenu implements ModMenuApi {
                 .setParentScreen(parent)
                 .setTitle(Component.literal("BetterHUD Settings"));
 
-            // same as builder.setSavingRunnable(() -> Config.serialize());
             builder.setSavingRunnable(Config::serialize);
 
             ConfigEntryBuilder entryBuilder = builder.entryBuilder();
