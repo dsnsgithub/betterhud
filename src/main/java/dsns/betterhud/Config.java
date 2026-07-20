@@ -119,6 +119,30 @@ public class Config {
             }
         }
 
+        for (Map.Entry<String, ModSettings> modEntry : settings.entrySet()) {
+            String modID = modEntry.getKey();
+            if (
+                map.containsKey(modID + ".Position") ||
+                map.containsKey(modID + ".position")
+            ) continue;
+
+            String legacyCustom = map.getOrDefault(
+                modID + ".Custom Position",
+                map.get(modID + ".customPosition")
+            );
+            String legacyOrientation = map.getOrDefault(
+                modID + ".Orientation",
+                map.get(modID + ".orientation")
+            );
+
+            Setting position = modEntry.getValue().getSetting("Position");
+            if ("true".equals(legacyCustom)) {
+                position.setValue("custom");
+            } else if (legacyOrientation != null) {
+                position.setValue(legacyOrientation);
+            }
+        }
+
         String globalBg = map.get("backgroundColor");
         if (globalBg != null) {
             for (Map.Entry<

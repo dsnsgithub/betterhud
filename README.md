@@ -4,21 +4,16 @@
 
 A simple HUD with essential information easily accessible for Minecraft Fabric. 
 
-Requires [Cloth Config](https://modrinth.com/mod/cloth-config), [Mod Menu](https://modrinth.com/mod/modmenu), and [Fabric API](https://modrinth.com/mod/fabric-api).
+Requires [Cloth Config](https://modrinth.com/mod/cloth-config) and
+[Fabric API](https://modrinth.com/mod/fabric-api).
 
 ![Picture of HUD](https://cdn.modrinth.com/data/cached_images/4dd33c9ed510e100af5cc442eb93092624856ba5.png)
 
-## Features
+## HUD Editor
 
-- **FPS**: Displays the current frames per second.
-- **Ping**: Displays the player's ping to the server.
-- **Momentum**: Displays the player's current momentum.
-- **Coordinates**: Displays the player's current coordinates.
-- **Biome**: Displays the current biome the player is in.
-- **Facing**: Displays the direction the player is facing.
-- **Time**: Displays the current real world time.
+Use **Right Shift** in game (rebindable in Minecraft controls) or open BetterHUD settings with **Mod Menu** to edit BetterHUD.
 
-## Configuration (requires Mod Menu)
+## Configuration (requires Cloth Config)
 ![General Settings](https://cdn.modrinth.com/data/cached_images/9c3ed350ef0c2206a7439d1e1c15b708aa22a332.png)
 ![Mod Settings](https://cdn.modrinth.com/data/cached_images/f89e15c258a5a24cfda8fe9398406a7ce16edbcc.png)
 ## Installation

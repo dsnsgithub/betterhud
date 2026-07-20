@@ -1,0 +1,10 @@
+{
+	"key.betterhud.open_editor": "Edit HUD Layout",
+	"key.categories.betterhud": "BetterHUD",
+	"key.category.betterhud.main": "BetterHUD",
+	"betterhud.editor.title": "BetterHUD Editor",
+	"betterhud.editor.settings": "Settings",
+	"betterhud.editor.scale": "Scale: %s×",
+	"betterhud.editor.hint": "Drag an element to move it · Drop it near a corner to dock it · Scroll to resize",
+	"betterhud.editor.hint2": "Press Escape to save and close"
+}

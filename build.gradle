@@ -65,7 +65,6 @@ dependencies {
 processResources {
 	def dependsExtra = ''',
 		"fabric-api": "*",
-		"modmenu": "*",
 		"cloth-config2": "*"'''
 
 	def expansion = [
