@@ -17,17 +17,11 @@ public class ModSettings {
     public ModSettings() {
         settings.put("Enabled", Setting.createBooleanSetting(true));
 
-        // A corner docks the element into that corner's stack; "custom" places
-        // it at Custom X/Y. Set by dragging in the HUD editor, or from the
-        // settings screen to reset an element back to a corner.
         settings.put(
             "Position",
             Setting.createStringSetting("top-left", POSITIONS)
         );
 
-        // Percentages (0-100) of the space the element can occupy without
-        // leaving the screen. Doubles so dragging in the HUD editor is smooth;
-        // old integer config values still parse.
         settings.put("Custom X", Setting.createDoubleSetting(0, 0, 100));
         settings.put("Custom Y", Setting.createDoubleSetting(0, 0, 100));
         settings.put("Text Color", Setting.createColorSetting(0xffffffff));

@@ -4,11 +4,6 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 
-/**
- * Shared placement math for HUD elements. Both the in-game HUD renderer and
- * the HUD editor screen go through this class, so the editor preview always
- * matches what the HUD actually renders.
- */
 public final class HudLayout {
 
     public static final int VERTICAL_PADDING = 4;
@@ -48,12 +43,6 @@ public final class HudLayout {
         return (int) (h * text.scale);
     }
 
-    /**
-     * Computes the on-screen position of every element. Corner-docked
-     * elements stack downwards (or upwards) from their corner in list order;
-     * custom-positioned elements map their 0-100% coordinates onto the space
-     * the element can occupy without leaving the screen.
-     */
     public static List<Placed> layout(Minecraft client, List<CustomText> texts) {
         List<Placed> placed = new ObjectArrayList<>();
 

@@ -27,18 +27,10 @@ import org.joml.Matrix3x2fStack;
 /*import com.mojang.blaze3d.vertex.PoseStack;*/
 //?}
 
-/**
- * A Lunar Client style HUD editor: every enabled element is shown live and
- * can be dragged anywhere on the screen, docked into a corner stack by
- * dropping it there, and resized with the scroll wheel. Elements can never
- * overlap. Closing the screen (Escape) saves the layout to the config file.
- */
 public class HudEditorScreen extends Screen {
 
     private static final int SNAP_DISTANCE = 5;
 
-    // Dragging this close to a corner's dock anchor (the spot a docked
-    // element occupies, margin included) docks the element there.
     private static final int DOCK_SNAP_DISTANCE = 10;
 
     private static final String[] CORNERS = {
@@ -51,8 +43,6 @@ public class HudEditorScreen extends Screen {
     private static final int BACKDROP_COLOR = 0x50000000;
     private static final int NO_LEVEL_BACKDROP_COLOR = 0xff181818;
 
-    // Opaque beveled grays so the Settings button reads as a button rather
-    // than as another HUD element (those are translucent black boxes).
     private static final int BUTTON_BORDER_COLOR = 0xff000000;
     private static final int BUTTON_BORDER_HOVERED_COLOR = 0xffffffff;
     private static final int BUTTON_BODY_COLOR = 0xff6c6c6c;
@@ -60,8 +50,6 @@ public class HudEditorScreen extends Screen {
     private static final int BUTTON_BEVEL_LIGHT_COLOR = 0xffb4b4b4;
     private static final int BUTTON_BEVEL_DARK_COLOR = 0xff414141;
 
-    // The title and the Settings button live in the center of the screen:
-    // people rarely place a HUD element there, so they stay visible.
     private static final float TITLE_SCALE = 2.0f;
     private static final float BUTTON_TEXT_SCALE = 1.25f;
     private static final int OUTLINE_COLOR = 0x66ffffff;
@@ -106,11 +94,6 @@ public class HudEditorScreen extends Screen {
         refreshElements();
     }
 
-    /**
-     * Rebuilds the preview text of every enabled element. Elements whose mod
-     * has nothing to show right now (e.g. Ping in singleplayer) get a
-     * placeholder so they can still be positioned.
-     */
     private void refreshElements() {
         Minecraft client = Minecraft.getInstance();
 
@@ -144,7 +127,6 @@ public class HudEditorScreen extends Screen {
     }
 
     private HudLayout.Placed elementAt(double mouseX, double mouseY) {
-        // Iterate backwards so the element drawn on top wins.
         for (int i = placedElements.size() - 1; i >= 0; i--) {
             HudLayout.Placed placed = placedElements.get(i);
             if (
@@ -212,15 +194,12 @@ public class HudEditorScreen extends Screen {
 
         ModSettings settings = draggedMod.getModSettings();
 
-        // Near a corner the element docks into that corner's stack; the
-        // layout then slots it in with the usual margin and stacking.
         String dockCorner = dockCornerAt(x, y, maxX, maxY);
         if (dockCorner != null) {
             settings.getSetting("Position").setValue(dockCorner);
             return true;
         }
 
-        // Snap to the screen edges and the screen center lines.
         double centerX = maxX / 2.0;
         double centerY = maxY / 2.0;
         if (Math.abs(x - centerX) <= SNAP_DISTANCE) {
@@ -243,8 +222,6 @@ public class HudEditorScreen extends Screen {
         x = Math.clamp(x, 0, Math.max(maxX, 0));
         y = Math.clamp(y, 0, Math.max(maxY, 0));
 
-        // Elements may never cover each other: an overlapping spot is
-        // rejected and the element stays where it last fit.
         if (overlapsOtherElement(x, y, elementWidth, elementHeight)) {
             snappedCenterX = false;
             snappedCenterY = false;
@@ -264,7 +241,6 @@ public class HudEditorScreen extends Screen {
         return true;
     }
 
-    /** The corner whose dock anchor is within snapping range, or null. */
     private String dockCornerAt(double x, double y, int maxX, int maxY) {
         for (String corner : CORNERS) {
             boolean left = corner.endsWith("-left");
@@ -369,8 +345,6 @@ public class HudEditorScreen extends Screen {
         scale = Math.round(scale * 10.0f) / 10.0f;
         scale = Math.clamp(scale, 0.1f, 10.0f);
 
-        // Growing may not push the element into a neighbour; shrinking is
-        // always allowed so elements can never get stuck.
         if (scale > oldScale && resizeWouldOverlap(placed.text, scale)) {
             return true;
         }
@@ -437,8 +411,6 @@ public class HudEditorScreen extends Screen {
     ) {
         Minecraft client = Minecraft.getInstance();
 
-        // Opened from Mod Menu there may be no world behind the screen; use a
-        // solid backdrop instead of a translucent one.
         drawContext.fill(
             0,
             0,
@@ -504,7 +476,6 @@ public class HudEditorScreen extends Screen {
 
         drawSettingsButton(drawContext, client, mouseX, mouseY);
 
-        // The hints live at the bottom center, clear of the corner stacks.
         HudLayout.Placed described = draggedMod != null
             ? placedFor(draggedMod)
             : hovered;
@@ -551,8 +522,6 @@ public class HudEditorScreen extends Screen {
             return;
         }
 
-        // Classic button proportions (20px tall, text centered at
-        // (height - 8) / 2, ~10px side padding), scaled with the text.
         String label = I18n.get("betterhud.editor.settings");
         settingsButtonWidth =
             (int) ((client.font.width(label) + 20) * BUTTON_TEXT_SCALE);

@@ -12,17 +12,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/**
- * Builds the Cloth Config settings screen opened from the HUD editor's
- * Settings button. Kept free of Mod Menu classes so the editor can use it
- * when Mod Menu is not installed; Cloth Config classes are only touched
- * after the isModLoaded check.
- */
 public final class SettingsScreenBuilder {
 
-    // The raw coordinates are edited by dragging in the HUD editor and stay
-    // out of the settings screen; the Position dropdown stays visible so an
-    // element can be reset to a corner from here.
     private static final Set<String> EDITOR_MANAGED_SETTINGS = Set.of(
         "Custom X",
         "Custom Y"
@@ -34,10 +25,6 @@ public final class SettingsScreenBuilder {
         return FabricLoader.getInstance().isModLoaded("cloth-config2");
     }
 
-    /**
-     * Builds the settings screen (everything except placement), or returns
-     * null when Cloth Config is not installed.
-     */
     public static Screen createSettingsScreen(Screen parent) {
         if (!settingsScreenAvailable()) {
             return null;

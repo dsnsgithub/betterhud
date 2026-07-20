@@ -119,9 +119,6 @@ public class Config {
             }
         }
 
-        // Configs from before the Position setting united Orientation and
-        // Custom Position: a custom-positioned element becomes "custom",
-        // otherwise the old orientation carries over as the docked corner.
         for (Map.Entry<String, ModSettings> modEntry : settings.entrySet()) {
             String modID = modEntry.getKey();
             if (

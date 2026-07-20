@@ -69,7 +69,6 @@ public class BetterHUDGUI implements ClientTickEvents.StartTick {
         /*if (client.options.hideGui) return;*/
         //?}
 
-        // The editor draws its own live preview of every element.
         //? if >=26.2 {
         if (client.gui.screen() instanceof HudEditorScreen) return;
         //?} else {
