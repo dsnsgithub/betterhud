@@ -23,6 +23,11 @@ import net.minecraft.client.input.MouseButtonEvent;
 //?}
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+//? if >=1.21.6 {
+import org.joml.Matrix3x2fStack;
+//?} else {
+/*import com.mojang.blaze3d.vertex.PoseStack;*/
+//?}
 
 /**
  * A Lunar Client style HUD editor: every enabled element is shown live and
@@ -45,6 +50,11 @@ public class HudEditorScreen extends Screen {
     private static final int NO_LEVEL_BACKDROP_COLOR = 0xff181818;
     private static final int BUTTON_COLOR = 0x80000000;
     private static final int BUTTON_HOVERED_COLOR = 0xa0333333;
+
+    // The title and the Settings button live in the center of the screen:
+    // people rarely place a HUD element there, so they stay visible.
+    private static final float TITLE_SCALE = 2.0f;
+    private static final float BUTTON_TEXT_SCALE = 1.5f;
     private static final int OUTLINE_COLOR = 0x66ffffff;
     private static final int OUTLINE_HOVERED_COLOR = 0xccffffff;
     private static final int OUTLINE_DRAGGED_COLOR = 0xff55ffff;
@@ -409,7 +419,14 @@ public class HudEditorScreen extends Screen {
         }
 
         String heading = I18n.get("betterhud.editor.title");
-        drawCenteredText(drawContext, client, heading, 8, TEXT_COLOR);
+        drawScaledCenteredText(
+            drawContext,
+            client,
+            heading,
+            this.height / 2 - 26,
+            TEXT_COLOR,
+            TITLE_SCALE
+        );
 
         drawSettingsButton(drawContext, client, mouseX, mouseY);
 
@@ -461,10 +478,11 @@ public class HudEditorScreen extends Screen {
         }
 
         String label = I18n.get("betterhud.editor.settings");
-        settingsButtonWidth = client.font.width(label) + 12;
-        settingsButtonHeight = 14;
+        settingsButtonWidth =
+            (int) (client.font.width(label) * BUTTON_TEXT_SCALE) + 16;
+        settingsButtonHeight = 20;
         settingsButtonX = (this.width - settingsButtonWidth) / 2;
-        settingsButtonY = 20;
+        settingsButtonY = this.height / 2 + 2;
 
         boolean hovered = overSettingsButton(mouseX, mouseY);
         drawContext.fill(
@@ -482,13 +500,53 @@ public class HudEditorScreen extends Screen {
             settingsButtonHeight,
             hovered ? OUTLINE_HOVERED_COLOR : OUTLINE_COLOR
         );
-        drawCenteredText(
+        drawScaledCenteredText(
             drawContext,
             client,
             label,
-            settingsButtonY + 3,
-            hovered ? TEXT_COLOR : TEXT_MUTED_COLOR
+            settingsButtonY + 4,
+            hovered ? TEXT_COLOR : TEXT_MUTED_COLOR,
+            BUTTON_TEXT_SCALE
         );
+    }
+
+    private void drawScaledCenteredText(
+        //? if >=26 {
+        GuiGraphicsExtractor drawContext,
+        //?} else {
+        /*GuiGraphics drawContext,*/
+        //?}
+        Minecraft client,
+        String text,
+        int y,
+        int color,
+        float scale
+    ) {
+        int x = (int) ((this.width - client.font.width(text) * scale) / 2);
+
+        //? if >=1.21.6 {
+        Matrix3x2fStack poses = drawContext.pose();
+        poses.pushMatrix();
+        poses.translate(x, y);
+        poses.scale(scale, scale);
+        //?} else {
+        /*PoseStack poses = drawContext.pose();
+        poses.pushPose();
+        poses.translate(x, y, 0);
+        poses.scale(scale, scale, 1);*/
+        //?}
+
+        //? if >=26 {
+        drawContext.text(client.font, text, 0, 0, color, true);
+        //?} else {
+        /*drawContext.drawString(client.font, text, 0, 0, color, true);*/
+        //?}
+
+        //? if >=1.21.6 {
+        poses.popMatrix();
+        //?} else {
+        /*poses.popPose();*/
+        //?}
     }
 
     private void drawCenteredText(
