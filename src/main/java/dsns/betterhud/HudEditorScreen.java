@@ -48,8 +48,15 @@ public class HudEditorScreen extends Screen {
 
     private static final int BACKDROP_COLOR = 0x50000000;
     private static final int NO_LEVEL_BACKDROP_COLOR = 0xff181818;
-    private static final int BUTTON_COLOR = 0x80000000;
-    private static final int BUTTON_HOVERED_COLOR = 0xa0333333;
+
+    // Opaque beveled grays so the Settings button reads as a button rather
+    // than as another HUD element (those are translucent black boxes).
+    private static final int BUTTON_BORDER_COLOR = 0xff000000;
+    private static final int BUTTON_BORDER_HOVERED_COLOR = 0xffffffff;
+    private static final int BUTTON_BODY_COLOR = 0xff6c6c6c;
+    private static final int BUTTON_BODY_HOVERED_COLOR = 0xff8d8d8d;
+    private static final int BUTTON_BEVEL_LIGHT_COLOR = 0xffb4b4b4;
+    private static final int BUTTON_BEVEL_DARK_COLOR = 0xff414141;
 
     // The title and the Settings button live in the center of the screen:
     // people rarely place a HUD element there, so they stay visible.
@@ -485,27 +492,36 @@ public class HudEditorScreen extends Screen {
         settingsButtonY = this.height / 2 + 2;
 
         boolean hovered = overSettingsButton(mouseX, mouseY);
+        int x = settingsButtonX;
+        int y = settingsButtonY;
+        int w = settingsButtonWidth;
+        int h = settingsButtonHeight;
+
         drawContext.fill(
-            settingsButtonX,
-            settingsButtonY,
-            settingsButtonX + settingsButtonWidth,
-            settingsButtonY + settingsButtonHeight,
-            hovered ? BUTTON_HOVERED_COLOR : BUTTON_COLOR
+            x,
+            y,
+            x + w,
+            y + h,
+            hovered ? BUTTON_BORDER_HOVERED_COLOR : BUTTON_BORDER_COLOR
         );
-        drawOutline(
-            drawContext,
-            settingsButtonX,
-            settingsButtonY,
-            settingsButtonWidth,
-            settingsButtonHeight,
-            hovered ? OUTLINE_HOVERED_COLOR : OUTLINE_COLOR
+        drawContext.fill(
+            x + 1,
+            y + 1,
+            x + w - 1,
+            y + h - 1,
+            hovered ? BUTTON_BODY_HOVERED_COLOR : BUTTON_BODY_COLOR
         );
+        drawContext.fill(x + 1, y + 1, x + w - 1, y + 2, BUTTON_BEVEL_LIGHT_COLOR);
+        drawContext.fill(x + 1, y + 1, x + 2, y + h - 1, BUTTON_BEVEL_LIGHT_COLOR);
+        drawContext.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, BUTTON_BEVEL_DARK_COLOR);
+        drawContext.fill(x + w - 2, y + 2, x + w - 1, y + h - 1, BUTTON_BEVEL_DARK_COLOR);
+
         drawScaledCenteredText(
             drawContext,
             client,
             label,
             settingsButtonY + 4,
-            hovered ? TEXT_COLOR : TEXT_MUTED_COLOR,
+            TEXT_COLOR,
             BUTTON_TEXT_SCALE
         );
     }
