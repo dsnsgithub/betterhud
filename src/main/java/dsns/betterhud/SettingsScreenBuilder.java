@@ -12,17 +12,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-/**
- * Builds the Cloth Config settings screen opened from the HUD editor's
- * Settings button. Kept free of Mod Menu classes so the editor can use it
- * when Mod Menu is not installed; Cloth Config classes are only touched
- * after the isModLoaded check.
- */
 public final class SettingsScreenBuilder {
 
-    // Placement is edited by dragging in the HUD editor, so these settings
-    // stay out of the settings screen. They remain in the config file as the
-    // persistence format the editor writes.
     private static final Set<String> EDITOR_MANAGED_SETTINGS = Set.of(
         "Orientation",
         "Custom Position",
@@ -36,10 +27,6 @@ public final class SettingsScreenBuilder {
         return FabricLoader.getInstance().isModLoaded("cloth-config2");
     }
 
-    /**
-     * Builds the settings screen (everything except placement), or returns
-     * null when Cloth Config is not installed.
-     */
     public static Screen createSettingsScreen(Screen parent) {
         if (!settingsScreenAvailable()) {
             return null;
