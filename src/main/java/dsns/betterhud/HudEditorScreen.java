@@ -167,7 +167,7 @@ public class HudEditorScreen extends Screen {
 
     private boolean handleMouseDown(double mouseX, double mouseY, int button) {
         if (button == 0 && overSettingsButton(mouseX, mouseY)) {
-            Screen settings = ModMenu.createSettingsScreen(this);
+            Screen settings = SettingsScreenBuilder.createSettingsScreen(this);
             if (settings != null) {
                 Minecraft client = Minecraft.getInstance();
                 //? if >=26.2 {
@@ -479,7 +479,7 @@ public class HudEditorScreen extends Screen {
         int mouseX,
         int mouseY
     ) {
-        if (!ModMenu.settingsScreenAvailable()) {
+        if (!SettingsScreenBuilder.settingsScreenAvailable()) {
             settingsButtonWidth = 0;
             return;
         }

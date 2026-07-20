@@ -24,5 +24,8 @@
 		"fabricloader": "${loaderReq}",
 		"minecraft": "${minecraftReq}",
 		"java": "${javaReq}"${dependsExtra}
+	},
+	"suggests": {
+		"modmenu": "*"
 	}
 }

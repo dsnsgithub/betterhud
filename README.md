@@ -4,7 +4,10 @@
 
 A simple HUD with essential information easily accessible for Minecraft Fabric. 
 
-Requires [Cloth Config](https://modrinth.com/mod/cloth-config), [Mod Menu](https://modrinth.com/mod/modmenu), and [Fabric API](https://modrinth.com/mod/fabric-api).
+Requires [Cloth Config](https://modrinth.com/mod/cloth-config) and
+[Fabric API](https://modrinth.com/mod/fabric-api).
+[Mod Menu](https://modrinth.com/mod/modmenu) is optional — it adds a configure
+button that opens the HUD editor.
 
 ![Picture of HUD](https://cdn.modrinth.com/data/cached_images/4dd33c9ed510e100af5cc442eb93092624856ba5.png)
 
@@ -32,7 +35,7 @@ typing numbers:
 - **Settings…** opens the settings screen (colors, toggles, scale).
 - **Escape** saves the layout and closes the editor.
 
-## Configuration (requires Mod Menu)
+## Configuration (requires Cloth Config)
 ![General Settings](https://cdn.modrinth.com/data/cached_images/9c3ed350ef0c2206a7439d1e1c15b708aa22a332.png)
 ![Mod Settings](https://cdn.modrinth.com/data/cached_images/f89e15c258a5a24cfda8fe9398406a7ce16edbcc.png)
 ## Installation
