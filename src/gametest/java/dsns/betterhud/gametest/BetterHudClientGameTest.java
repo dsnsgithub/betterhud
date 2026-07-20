@@ -33,11 +33,6 @@ public class BetterHudClientGameTest implements FabricClientGameTest {
 		}
 	}
 
-	// Opens the HUD editor with its keybinding (Right Shift), drags the FPS
-	// element (first in the top-left stack) toward the middle of the screen,
-	// saves with Escape, and checks the dragged position reached the config.
-	// Kept free of betterhud classes because this test driver mod only
-	// compiles against Minecraft and Fabric API.
 	private static void exerciseHudEditor(ClientGameTestContext context) {
 		TestInput input = context.getInput();
 
@@ -45,12 +40,8 @@ public class BetterHudClientGameTest implements FabricClientGameTest {
 		context.waitTicks(5);
 		assertScreenshotSaved(context.takeScreenshot("betterhud-hud-editor"));
 
-		// getGuiScale() returns double on 1.21.4/1.21.5 and int on newer
-		// versions; the cast widens either to double.
 		double guiScale = context.computeOnClient(client -> (double) client.getWindow().getGuiScale());
 
-		// Grab the FPS element well inside its box (it spans roughly
-		// (1,1)-(35,17) in gui coordinates) and drag it down-right.
 		input.setCursorPos(12.0 * guiScale, 8.0 * guiScale);
 		input.holdMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
 		for (int i = 0; i < 10; i++) {
@@ -75,8 +66,6 @@ public class BetterHudClientGameTest implements FabricClientGameTest {
 					"Dragging in the HUD editor did not move the FPS element: x=" + customX + "% y=" + customY + "%");
 		}
 
-		// Reopen the editor and dock the element back into its corner stack
-		// with a right click.
 		input.pressKey(GLFW.GLFW_KEY_RIGHT_SHIFT);
 		context.waitTicks(5);
 		input.setCursorPos(92.0 * guiScale, 58.0 * guiScale);
