@@ -61,7 +61,7 @@ public class HudEditorScreen extends Screen {
     // The title and the Settings button live in the center of the screen:
     // people rarely place a HUD element there, so they stay visible.
     private static final float TITLE_SCALE = 2.0f;
-    private static final float BUTTON_TEXT_SCALE = 1.5f;
+    private static final float BUTTON_TEXT_SCALE = 1.25f;
     private static final int OUTLINE_COLOR = 0x66ffffff;
     private static final int OUTLINE_HOVERED_COLOR = 0xccffffff;
     private static final int OUTLINE_DRAGGED_COLOR = 0xff55ffff;
