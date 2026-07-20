@@ -484,10 +484,12 @@ public class HudEditorScreen extends Screen {
             return;
         }
 
+        // Classic button proportions (20px tall, text centered at
+        // (height - 8) / 2, ~10px side padding), scaled with the text.
         String label = I18n.get("betterhud.editor.settings");
         settingsButtonWidth =
-            (int) (client.font.width(label) * BUTTON_TEXT_SCALE) + 16;
-        settingsButtonHeight = 20;
+            (int) ((client.font.width(label) + 20) * BUTTON_TEXT_SCALE);
+        settingsButtonHeight = (int) (20 * BUTTON_TEXT_SCALE);
         settingsButtonX = (this.width - settingsButtonWidth) / 2;
         settingsButtonY = this.height / 2 + 2;
 
@@ -520,7 +522,8 @@ public class HudEditorScreen extends Screen {
             drawContext,
             client,
             label,
-            settingsButtonY + 4,
+            settingsButtonY +
+                (int) ((settingsButtonHeight - 8 * BUTTON_TEXT_SCALE) / 2),
             TEXT_COLOR,
             BUTTON_TEXT_SCALE
         );
