@@ -12,10 +12,6 @@ import org.joml.Matrix3x2fStack;
 /*import com.mojang.blaze3d.vertex.PoseStack;*/
 //?}
 
-/**
- * Draws a single HUD element (background + text). Shared between the in-game
- * HUD and the HUD editor screen.
- */
 public final class HudRenderer {
 
     private HudRenderer() {}
