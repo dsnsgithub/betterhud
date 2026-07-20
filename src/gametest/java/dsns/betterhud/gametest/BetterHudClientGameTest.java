@@ -74,6 +74,22 @@ public class BetterHudClientGameTest implements FabricClientGameTest {
 			throw new AssertionError(
 					"Dragging in the HUD editor did not move the FPS element: x=" + customX + "% y=" + customY + "%");
 		}
+
+		// Reopen the editor and dock the element back into its corner stack
+		// with a right click.
+		input.pressKey(GLFW.GLFW_KEY_RIGHT_SHIFT);
+		context.waitTicks(5);
+		input.setCursorPos(92.0 * guiScale, 58.0 * guiScale);
+		input.pressMouse(GLFW.GLFW_MOUSE_BUTTON_RIGHT);
+		context.waitTicks(2);
+		input.pressKey(GLFW.GLFW_KEY_ESCAPE);
+		context.waitTicks(2);
+
+		config = loadConfig();
+		if (!"false".equals(config.getProperty("FPS.Custom Position"))) {
+			throw new AssertionError(
+					"Right-clicking in the HUD editor did not dock the FPS element back: " + config);
+		}
 	}
 
 	private static Properties loadConfig() {

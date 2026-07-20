@@ -5,7 +5,9 @@ import dsns.betterhud.util.CustomText;
 import dsns.betterhud.util.HudLayout;
 import dsns.betterhud.util.HudRenderer;
 import dsns.betterhud.util.ModSettings;
+import dsns.betterhud.util.Setting;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +34,17 @@ public class HudEditorScreen extends Screen {
 
     private static final int SNAP_DISTANCE = 5;
 
+    private static final String[] CORNER_CYCLE = {
+        "top-left",
+        "top-right",
+        "bottom-right",
+        "bottom-left",
+    };
+
     private static final int BACKDROP_COLOR = 0x50000000;
+    private static final int NO_LEVEL_BACKDROP_COLOR = 0xff181818;
+    private static final int BUTTON_COLOR = 0x80000000;
+    private static final int BUTTON_HOVERED_COLOR = 0xa0333333;
     private static final int OUTLINE_COLOR = 0x66ffffff;
     private static final int OUTLINE_HOVERED_COLOR = 0xccffffff;
     private static final int OUTLINE_DRAGGED_COLOR = 0xff55ffff;
@@ -40,6 +52,7 @@ public class HudEditorScreen extends Screen {
     private static final int TEXT_COLOR = 0xffffffff;
     private static final int TEXT_MUTED_COLOR = 0xffaaaaaa;
 
+    private final Screen parent;
     private final List<CustomText> texts = new ObjectArrayList<>();
     private final Map<CustomText, BaseMod> owners = new IdentityHashMap<>();
     private List<HudLayout.Placed> placedElements = new ObjectArrayList<>();
@@ -50,8 +63,18 @@ public class HudEditorScreen extends Screen {
     private boolean snappedCenterX = false;
     private boolean snappedCenterY = false;
 
+    private int settingsButtonX = 0;
+    private int settingsButtonY = 0;
+    private int settingsButtonWidth = 0;
+    private int settingsButtonHeight = 0;
+
     public HudEditorScreen() {
+        this(null);
+    }
+
+    public HudEditorScreen(Screen parent) {
         super(Component.translatable("betterhud.editor.title"));
+        this.parent = parent;
     }
 
     @Override
@@ -115,16 +138,51 @@ public class HudEditorScreen extends Screen {
         return null;
     }
 
+    private boolean overSettingsButton(double mouseX, double mouseY) {
+        return (
+            settingsButtonWidth > 0 &&
+            mouseX >= settingsButtonX &&
+            mouseX < settingsButtonX + settingsButtonWidth &&
+            mouseY >= settingsButtonY &&
+            mouseY < settingsButtonY + settingsButtonHeight
+        );
+    }
+
     private boolean handleMouseDown(double mouseX, double mouseY, int button) {
+        if (button == 0 && overSettingsButton(mouseX, mouseY)) {
+            Screen settings = ModMenu.createSettingsScreen(this);
+            if (settings != null) {
+                Minecraft client = Minecraft.getInstance();
+                //? if >=26.2 {
+                client.gui.setScreen(settings);
+                //?} else {
+                /*client.setScreen(settings);*/
+                //?}
+            }
+            return true;
+        }
+
         HudLayout.Placed placed = elementAt(mouseX, mouseY);
         if (placed == null) return false;
 
         BaseMod mod = owners.get(placed.text);
 
         if (button == 1) {
-            // Right click: give up the custom position and rejoin the corner
-            // stack selected by the Orientation setting.
-            mod.getModSettings().getSetting("Custom Position").setValue("false");
+            // Right click: dock the element. A custom-positioned element goes
+            // back to its corner stack; a docked one cycles to the next corner.
+            ModSettings settings = mod.getModSettings();
+            Setting customPosition = settings.getSetting("Custom Position");
+            if (customPosition.getBooleanValue()) {
+                customPosition.setValue("false");
+            } else {
+                Setting orientation = settings.getSetting("Orientation");
+                int index = Arrays.asList(CORNER_CYCLE).indexOf(
+                    orientation.getStringValue()
+                );
+                orientation.setValue(
+                    CORNER_CYCLE[(index + 1) % CORNER_CYCLE.length]
+                );
+            }
             return true;
         }
 
@@ -295,7 +353,15 @@ public class HudEditorScreen extends Screen {
     ) {
         Minecraft client = Minecraft.getInstance();
 
-        drawContext.fill(0, 0, this.width, this.height, BACKDROP_COLOR);
+        // Opened from Mod Menu there may be no world behind the screen; use a
+        // solid backdrop instead of a translucent one.
+        drawContext.fill(
+            0,
+            0,
+            this.width,
+            this.height,
+            client.level == null ? NO_LEVEL_BACKDROP_COLOR : BACKDROP_COLOR
+        );
 
         for (CustomText text : texts) {
             text.applyPlacement(owners.get(text).getModSettings());
@@ -345,6 +411,8 @@ public class HudEditorScreen extends Screen {
         String heading = I18n.get("betterhud.editor.title");
         drawCenteredText(drawContext, client, heading, 8, TEXT_COLOR);
 
+        drawSettingsButton(drawContext, client, mouseX, mouseY);
+
         // The hints live at the bottom center, clear of the corner stacks.
         HudLayout.Placed described = draggedMod != null
             ? placedFor(draggedMod)
@@ -375,6 +443,52 @@ public class HudEditorScreen extends Screen {
                 TEXT_MUTED_COLOR
             );
         }
+    }
+
+    private void drawSettingsButton(
+        //? if >=26 {
+        GuiGraphicsExtractor drawContext,
+        //?} else {
+        /*GuiGraphics drawContext,*/
+        //?}
+        Minecraft client,
+        int mouseX,
+        int mouseY
+    ) {
+        if (!ModMenu.settingsScreenAvailable()) {
+            settingsButtonWidth = 0;
+            return;
+        }
+
+        String label = I18n.get("betterhud.editor.settings");
+        settingsButtonWidth = client.font.width(label) + 12;
+        settingsButtonHeight = 14;
+        settingsButtonX = (this.width - settingsButtonWidth) / 2;
+        settingsButtonY = 20;
+
+        boolean hovered = overSettingsButton(mouseX, mouseY);
+        drawContext.fill(
+            settingsButtonX,
+            settingsButtonY,
+            settingsButtonX + settingsButtonWidth,
+            settingsButtonY + settingsButtonHeight,
+            hovered ? BUTTON_HOVERED_COLOR : BUTTON_COLOR
+        );
+        drawOutline(
+            drawContext,
+            settingsButtonX,
+            settingsButtonY,
+            settingsButtonWidth,
+            settingsButtonHeight,
+            hovered ? OUTLINE_HOVERED_COLOR : OUTLINE_COLOR
+        );
+        drawCenteredText(
+            drawContext,
+            client,
+            label,
+            settingsButtonY + 3,
+            hovered ? TEXT_COLOR : TEXT_MUTED_COLOR
+        );
     }
 
     private void drawCenteredText(
@@ -417,6 +531,16 @@ public class HudEditorScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void onClose() {
+        Minecraft client = Minecraft.getInstance();
+        //? if >=26.2 {
+        client.gui.setScreen(parent);
+        //?} else {
+        /*client.setScreen(parent);*/
+        //?}
     }
 
     @Override

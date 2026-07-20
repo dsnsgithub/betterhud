@@ -6,123 +6,144 @@ import dsns.betterhud.util.BaseMod;
 import dsns.betterhud.util.Setting;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public class ModMenu implements ModMenuApi {
 
+    // Placement is edited by dragging in the HUD editor, so these settings
+    // stay out of the settings screen. They remain in the config file as the
+    // persistence format the editor writes.
+    private static final Set<String> EDITOR_MANAGED_SETTINGS = Set.of(
+        "Orientation",
+        "Custom Position",
+        "Custom X",
+        "Custom Y"
+    );
+
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        if (!FabricLoader.getInstance().isModLoaded("cloth-config2")) {
-            return parent -> null;
+        return HudEditorScreen::new;
+    }
+
+    public static boolean settingsScreenAvailable() {
+        return FabricLoader.getInstance().isModLoaded("cloth-config2");
+    }
+
+    /**
+     * Builds the Cloth Config settings screen (everything except placement),
+     * or returns null when Cloth Config is not installed.
+     */
+    public static Screen createSettingsScreen(Screen parent) {
+        if (!settingsScreenAvailable()) {
+            return null;
         }
-        return parent -> {
-            ConfigBuilder builder = ConfigBuilder.create()
-                .setParentScreen(parent)
-                .setTitle(Component.literal("BetterHUD Settings"));
 
-            builder.setSavingRunnable(Config::serialize);
+        ConfigBuilder builder = ConfigBuilder.create()
+            .setParentScreen(parent)
+            .setTitle(Component.literal("BetterHUD Settings"));
 
-            ConfigEntryBuilder entryBuilder = builder.entryBuilder();
+        builder.setSavingRunnable(Config::serialize);
 
-            for (BaseMod mod : BetterHUD.mods) {
-                ConfigCategory category = builder.getOrCreateCategory(
-                    Component.literal(mod.getModID())
-                );
+        ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
-                for (Map.Entry<String, Setting> entry : mod
-                    .getModSettings()
-                    .getSettings()
-                    .entrySet()) {
-                    String key = entry.getKey();
-                    Setting setting = entry.getValue();
+        for (BaseMod mod : BetterHUD.mods) {
+            ConfigCategory category = builder.getOrCreateCategory(
+                Component.literal(mod.getModID())
+            );
 
-                    if (setting.getType().equals("boolean")) {
-                        category.addEntry(
-                            entryBuilder
-                                .startBooleanToggle(
-                                    Component.literal(key),
-                                    setting.getBooleanValue()
-                                )
-                                .setDefaultValue(
-                                    Boolean.valueOf(setting.getDefaultValue())
-                                )
-                                .setSaveConsumer(value ->
-                                    setting.setValue(String.valueOf(value))
-                                )
-                                .build()
-                        );
-                    } else if (setting.getType().equals("string")) {
-                        category.addEntry(
-                            entryBuilder
-                                .startStringDropdownMenu(
-                                    Component.literal(key),
-                                    setting.getStringValue()
-                                )
-                                .setSelections(
-                                    Arrays.asList(setting.getPossibleValues())
-                                )
-                                .setDefaultValue(setting.getDefaultValue())
-                                .setSaveConsumer(value ->
-                                    setting.setValue(value)
-                                )
-                                .build()
-                        );
-                    } else if (setting.getType().equals("integer")) {
-                        category.addEntry(
-                            entryBuilder
-                                .startIntField(
-                                    Component.literal(key),
-                                    setting.getIntValue()
-                                )
-                                .setDefaultValue(
-                                    Integer.parseInt(setting.getDefaultValue())
-                                )
-                                .setSaveConsumer(value ->
-                                    setting.setValue(String.valueOf(value))
-                                )
-                                .build()
-                        );
-                    } else if (setting.getType().equals("double")) {
-                        category.addEntry(
-                            entryBuilder
-                                .startDoubleField(
-                                    Component.literal(key),
-                                    setting.getDoubleValue()
-                                )
-                                .setDefaultValue(
-                                    Double.parseDouble(
-                                        setting.getDefaultValue()
-                                    )
-                                )
-                                .setSaveConsumer(value ->
-                                    setting.setValue(String.valueOf(value))
-                                )
-                                .build()
-                        );
-                    } else if (setting.getType().equals("color")) {
-                        category.addEntry(
-                            entryBuilder
-                                .startAlphaColorField(
-                                    Component.literal(key),
-                                    setting.getColorValue()
-                                )
-                                .setDefaultValue(
-                                    Integer.parseInt(setting.getDefaultValue())
-                                )
-                                .setSaveConsumer(value ->
-                                    setting.setValue(String.valueOf(value))
-                                )
-                                .build()
-                        );
-                    }
+            for (Map.Entry<String, Setting> entry : mod
+                .getModSettings()
+                .getSettings()
+                .entrySet()) {
+                String key = entry.getKey();
+                Setting setting = entry.getValue();
+
+                if (EDITOR_MANAGED_SETTINGS.contains(key)) continue;
+
+                if (setting.getType().equals("boolean")) {
+                    category.addEntry(
+                        entryBuilder
+                            .startBooleanToggle(
+                                Component.literal(key),
+                                setting.getBooleanValue()
+                            )
+                            .setDefaultValue(
+                                Boolean.valueOf(setting.getDefaultValue())
+                            )
+                            .setSaveConsumer(value ->
+                                setting.setValue(String.valueOf(value))
+                            )
+                            .build()
+                    );
+                } else if (setting.getType().equals("string")) {
+                    category.addEntry(
+                        entryBuilder
+                            .startStringDropdownMenu(
+                                Component.literal(key),
+                                setting.getStringValue()
+                            )
+                            .setSelections(
+                                Arrays.asList(setting.getPossibleValues())
+                            )
+                            .setDefaultValue(setting.getDefaultValue())
+                            .setSaveConsumer(value -> setting.setValue(value))
+                            .build()
+                    );
+                } else if (setting.getType().equals("integer")) {
+                    category.addEntry(
+                        entryBuilder
+                            .startIntField(
+                                Component.literal(key),
+                                setting.getIntValue()
+                            )
+                            .setDefaultValue(
+                                Integer.parseInt(setting.getDefaultValue())
+                            )
+                            .setSaveConsumer(value ->
+                                setting.setValue(String.valueOf(value))
+                            )
+                            .build()
+                    );
+                } else if (setting.getType().equals("double")) {
+                    category.addEntry(
+                        entryBuilder
+                            .startDoubleField(
+                                Component.literal(key),
+                                setting.getDoubleValue()
+                            )
+                            .setDefaultValue(
+                                Double.parseDouble(setting.getDefaultValue())
+                            )
+                            .setSaveConsumer(value ->
+                                setting.setValue(String.valueOf(value))
+                            )
+                            .build()
+                    );
+                } else if (setting.getType().equals("color")) {
+                    category.addEntry(
+                        entryBuilder
+                            .startAlphaColorField(
+                                Component.literal(key),
+                                setting.getColorValue()
+                            )
+                            .setDefaultValue(
+                                Integer.parseInt(setting.getDefaultValue())
+                            )
+                            .setSaveConsumer(value ->
+                                setting.setValue(String.valueOf(value))
+                            )
+                            .build()
+                    );
                 }
             }
+        }
 
-            return builder.build();
-        };
+        return builder.build();
     }
 }

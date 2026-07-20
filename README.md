@@ -20,13 +20,16 @@ Requires [Cloth Config](https://modrinth.com/mod/cloth-config), [Mod Menu](https
 
 ## HUD Editor
 
-Press **Right Shift** in game (rebindable in Options → Controls → BetterHUD) to
-open the HUD editor and arrange the HUD visually instead of typing numbers:
+Press **Right Shift** in game (rebindable in Options → Controls → BetterHUD),
+or open BetterHUD from **Mod Menu**, to arrange the HUD visually instead of
+typing numbers:
 
 - **Drag** an element to place it anywhere on the screen (it snaps to the
   screen edges and center lines).
 - **Scroll** while hovering an element to resize it.
-- **Right-click** an element to snap it back to its corner stack.
+- **Right-click** an element to dock it back into a corner; right-click a
+  docked element to cycle it through the corners.
+- **Settings…** opens the settings screen (colors, toggles, scale).
 - **Escape** saves the layout and closes the editor.
 
 ## Configuration (requires Mod Menu)
