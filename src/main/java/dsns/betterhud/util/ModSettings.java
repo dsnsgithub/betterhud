@@ -23,8 +23,11 @@ public class ModSettings {
         );
 
         settings.put("Custom Position", Setting.createBooleanSetting(false));
-        settings.put("Custom X", Setting.createIntegerSetting(0, 0, 100));
-        settings.put("Custom Y", Setting.createIntegerSetting(0, 0, 100));
+        // Percentages (0-100) of the space the element can occupy without
+        // leaving the screen. Doubles so dragging in the HUD editor is smooth;
+        // old integer config values still parse.
+        settings.put("Custom X", Setting.createDoubleSetting(0, 0, 100));
+        settings.put("Custom Y", Setting.createDoubleSetting(0, 0, 100));
         settings.put("Text Color", Setting.createColorSetting(0xffffffff));
         settings.put("Scale", Setting.createDoubleSetting(1.0, 0.1, 10.0));
         settings.put(

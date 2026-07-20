@@ -18,6 +18,17 @@ Requires [Cloth Config](https://modrinth.com/mod/cloth-config), [Mod Menu](https
 - **Facing**: Displays the direction the player is facing.
 - **Time**: Displays the current real world time.
 
+## HUD Editor
+
+Press **Right Shift** in game (rebindable in Options → Controls → BetterHUD) to
+open the HUD editor and arrange the HUD visually instead of typing numbers:
+
+- **Drag** an element to place it anywhere on the screen (it snaps to the
+  screen edges and center lines).
+- **Scroll** while hovering an element to resize it.
+- **Right-click** an element to snap it back to its corner stack.
+- **Escape** saves the layout and closes the editor.
+
 ## Configuration (requires Mod Menu)
 ![General Settings](https://cdn.modrinth.com/data/cached_images/9c3ed350ef0c2206a7439d1e1c15b708aa22a332.png)
 ![Mod Settings](https://cdn.modrinth.com/data/cached_images/f89e15c258a5a24cfda8fe9398406a7ce16edbcc.png)
