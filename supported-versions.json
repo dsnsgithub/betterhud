@@ -15,5 +15,5 @@
 	"26.1.1":  { "variant": "26.1",   "fabricApi": "0.145.4+26.1.1",  "modmenu": "18.0.0-beta.1", "cloth": "26.1.154",  "clientGametest": true },
 	"26.1.2":  { "variant": "26.1",   "fabricApi": "0.154.0+26.1.2",  "modmenu": "18.0.0-beta.1", "cloth": "26.1.154",  "clientGametest": true },
 	"26.2":    { "variant": "26.2",   "fabricApi": "0.154.0+26.2",    "modmenu": "20.0.0-beta.4", "cloth": "26.2.155",  "clientGametest": true },
-	"26.3":    { "variant": "26.2",   "fabricApi": "0.160.6+26.3",    "modmenu": "21.0.0-beta.1", "cloth": "26.3.158",  "clientGametest": true }
+	"26.3":    { "variant": "26.2",   "fabricApi": "0.160.6+26.3",    "modmenu": "21.0.0-beta.1", "cloth": "26.3.158",  "clientGametest": false }
 }
