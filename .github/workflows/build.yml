@@ -9,9 +9,9 @@ jobs:
       matrix:
         include:
           - java: "21"
-            mc_versions: ["1.21", "1.21.6"]
+            mc_versions: [ "1.21", "1.21.6" ]
           - java: "25"
-            mc_versions: ["26.1", "26.2"]
+            mc_versions: [ "26.1", "26.2" ]
 
     steps:
       - name: checkout repository
@@ -32,9 +32,9 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: build and upload minecraft versions
+      - name: build minecraft versions
         run: |
-          for mc in ${{ matrix.mc_versions }}; do
+          for mc in ${{ join(matrix.mc_versions, ' ') }}; do
             echo "Building Minecraft $mc..."
             ./gradlew :$mc:build
           done
