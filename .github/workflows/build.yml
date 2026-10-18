@@ -1,14 +1,9 @@
 name: build
 on: push
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   build:
-    name: build mc${{ matrix.mc }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
