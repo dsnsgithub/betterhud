@@ -8,11 +8,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - java: "21"
-            mc_versions: [ "1.21", "1.21.6" ]
-          - java: "25"
-            mc_versions: [ "26.1", "26.2" ]
-
+          - mc: "1.21"
+            java: "21"
+          - mc: "1.21.6"
+            java: "21"
+          - mc: "26.1"
+            java: "25"
+          - mc: "26.2"
+            java: "25"
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
@@ -32,15 +35,11 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: build minecraft versions
-        run: |
-          for mc in ${{ join(matrix.mc_versions, ' ') }}; do
-            echo "Building Minecraft $mc..."
-            ./gradlew :$mc:build
-          done
+      - name: build :${{ matrix.mc }}:build
+        run: ./gradlew :${{ matrix.mc }}:build
 
-      - name: upload all jars
+      - name: upload jar
         uses: actions/upload-artifact@v7
         with:
-          name: betterhud-java-${{ matrix.java }}
-          path: versions/*/build/libs/*.jar
+          name: betterhud-mc${{ matrix.mc }}
+          path: versions/${{ matrix.mc }}/build/libs/*.jar
