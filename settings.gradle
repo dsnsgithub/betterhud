@@ -21,8 +21,7 @@ plugins {
 	id 'dev.kikugie.stonecutter' version '0.9.3'
 }
 
-def supportedVersions = new groovy.json.JsonSlurper().parse(file('supported-versions.json'))
-def variants = supportedVersions.values()*.variant.unique()
+def variants = ["1.21", "1.21.6", "26.1", "26.2"]
 
 stonecutter {
 	create(rootProject) {
@@ -32,5 +31,3 @@ stonecutter {
 }
 
 rootProject.name = 'betterhud'
-
-include 'launchtest'
